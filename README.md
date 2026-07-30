@@ -18,13 +18,18 @@ cp .env.example .env
 1. Crea un proyecto en [neon.tech](https://neon.tech).
 2. Copia la **connection string pooled** (con `?pgbouncer=true`) a `DATABASE_URL`.
 3. Copia la **connection string directa** a `DIRECT_URL`.
-4. Corre las migraciones:
+4. Corre las migraciones. Ya existe una migración inicial en `prisma/migrations/` con todo el modelo de datos:
+   - En desarrollo, si vas a seguir modificando el schema:
+     ```bash
+     npm run db:migrate   # prisma migrate dev
+     ```
+   - En producción / CI (no requiere shadow database, solo aplica lo que ya existe en `prisma/migrations/`):
+     ```bash
+     npm run db:deploy    # prisma migrate deploy
+     ```
+5. Aplica las políticas de Row-Level Security (aislamiento entre tenants) — **obligatorio, sin esto no hay aislamiento real entre cuentas**:
    ```bash
-   npm run db:migrate
-   ```
-5. Aplica las políticas de Row-Level Security (aislamiento entre tenants):
-   ```bash
-   psql "$DIRECT_URL" -f prisma/rls.sql
+   npm run db:rls        # psql "$DIRECT_URL" -f prisma/rls.sql
    ```
 6. (Opcional) Carga datos de ejemplo:
    ```bash
@@ -56,6 +61,19 @@ Crea cuenta en [resend.com](https://resend.com), verifica tu dominio, copia la A
 ```bash
 npm run dev
 ```
+
+### 8. Despliegue en Vercel
+1. Importa el repo en [vercel.com](https://vercel.com) — detecta Next.js automáticamente.
+2. Copia **todas** las variables de `.env.example` a Environment Variables del proyecto en Vercel (Production, Preview y Development).
+3. `npm install` en Vercel dispara `postinstall` → `prisma generate`, así que el cliente de Prisma siempre queda generado antes del build. No necesitas configurar un Build Command custom.
+4. Antes del primer deploy con datos reales, corre desde tu máquina (apuntando a la base de Neon de producción):
+   ```bash
+   npm run db:deploy
+   npm run db:rls
+   ```
+5. Registra el webhook `https://tu-dominio.vercel.app/api/webhooks/stripe` en el dashboard de Stripe y copia el signing secret a `STRIPE_WEBHOOK_SECRET` en Vercel.
+6. Registra `https://tu-dominio.vercel.app/api/inngest` como el endpoint de la app en el dashboard de Inngest (Sync Apps) para que los dos jobs (`generate-recurring-invoices`, `remind-overdue-invoices`) queden activos en producción.
+7. En Clerk, agrega el dominio de producción en la configuración de la app y confirma que "Organizations" siga activo.
 
 ## Qué SÍ está construido en este scaffold
 

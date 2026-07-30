@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+* {
+  @apply border-ink-800;
+}
+
+body {
+  @apply bg-ink-950 text-ink-100 antialiased;
+}
+
+/* foco visible siempre — accesibilidad, no opcional */
+:focus-visible {
+  outline: 2px solid theme("colors.amber.400");
+  outline-offset: 2px;
+}
+
+/* skeleton loader — usado en toda la app en vez de spinners para contenido */
+.skeleton {
+  @apply animate-pulse rounded-md bg-ink-800;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { @apply bg-ink-700 rounded-full; }
+::-webkit-scrollbar-track { @apply bg-transparent; }

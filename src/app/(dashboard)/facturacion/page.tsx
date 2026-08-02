@@ -2,6 +2,7 @@ import { getTenantDb } from "@/lib/tenant";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import Image from "next/image";
 import { NewInvoiceDialog } from "@/components/facturacion/new-invoice-dialog";
+import { CopyLinkButton } from "@/components/facturacion/copy-link-button";
 
 const STATUS_STYLES: Record<string, string> = {
   PAGADA: "bg-success/15 text-success",
@@ -43,6 +44,7 @@ export default async function FacturacionPage() {
               <th className="px-4 py-3 font-medium">Vence</th>
               <th className="px-4 py-3 font-medium">Total</th>
               <th className="px-4 py-3 font-medium">Estado</th>
+              <th className="px-4 py-3 font-medium"></th>
             </tr>
           </thead>
           <tbody>
@@ -69,11 +71,14 @@ export default async function FacturacionPage() {
                     {inv.status}
                   </span>
                 </td>
+                <td className="px-4 py-3 text-right">
+                  <CopyLinkButton token={inv.publicToken} />
+                </td>
               </tr>
             ))}
             {invoices.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-12">
+                <td colSpan={6} className="px-4 py-12">
                   <div className="flex flex-col items-center justify-center text-center">
                     <Image
                       src="/illustrations/empty-invoices.png"

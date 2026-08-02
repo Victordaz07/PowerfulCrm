@@ -182,6 +182,7 @@ model Invoice {
   isRecurring   Boolean       @default(false)
   recurrenceRule String?      // ej. "monthly" — usado por el job de Inngest
   stripePaymentIntentId String?
+  publicToken   String        @unique @default(cuid()) // habilita /portal/[token] sin login
   createdAt     DateTime      @default(now())
 
   items         InvoiceItem[]

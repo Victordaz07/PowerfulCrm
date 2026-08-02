@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/api/webhooks/(.*)",
   "/api/inngest",
+  "/portal/(.*)", // portal de cliente: acceso por token, sin cuenta de Clerk
 ]);
 
 export default clerkMiddleware(

@@ -2,6 +2,7 @@ import { getTenantDb } from "@/lib/tenant";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
+import Image from "next/image";
 
 const STATUS_STYLES: Record<string, string> = {
   PAGADA: "bg-success/15 text-success",
@@ -71,8 +72,17 @@ export default async function FacturacionPage() {
             ))}
             {invoices.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-sm text-ink-500">
-                  Aún no has creado ninguna factura.
+                <td colSpan={5} className="px-4 py-12">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <Image
+                      src="/illustrations/empty-invoices.png"
+                      alt=""
+                      width={140}
+                      height={140}
+                      className="mb-3"
+                    />
+                    <p className="text-sm text-ink-500">Aún no has creado ninguna factura.</p>
+                  </div>
                 </td>
               </tr>
             )}

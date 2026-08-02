@@ -25,11 +25,13 @@ const STATUS_STYLES: Record<string, string> = {
 const PAYABLE_STATUSES = new Set(["PENDIENTE", "ENVIADA", "VENCIDA"]);
 
 interface PortalPageProps {
-  params: { token: string };
-  searchParams: { pago?: string; error?: string };
+  params: Promise<{ token: string }>;
+  searchParams: Promise<{ pago?: string; error?: string }>;
 }
 
-export default async function PortalInvoicePage({ params, searchParams }: PortalPageProps) {
+export default async function PortalInvoicePage(props: PortalPageProps) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const db = getSystemDb();
   const invoice = await db.invoice.findUnique({
     where: { publicToken: params.token },

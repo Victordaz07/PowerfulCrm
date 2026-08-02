@@ -3,10 +3,11 @@ import { CalendarView } from "@/components/calendario/calendar-view";
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
 
 interface CalendarioPageProps {
-  searchParams: { m?: string };
+  searchParams: Promise<{ m?: string }>;
 }
 
-export default async function CalendarioPage({ searchParams }: CalendarioPageProps) {
+export default async function CalendarioPage(props: CalendarioPageProps) {
+  const searchParams = await props.searchParams;
   const { db } = await getTenantDb();
   const now = new Date();
 

@@ -1,0 +1,84 @@
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
+
+export interface RecentInvoiceRow {
+  id: string;
+  clientName: string;
+  number: string;
+  date: Date;
+  total: number;
+  currency: string;
+  status: string;
+}
+
+const STATUS_STYLES: Record<string, string> = {
+  PAGADA: "bg-success/15 text-success",
+  PENDIENTE: "bg-amber-500/15 text-amber-400",
+  VENCIDA: "bg-danger/15 text-danger",
+  BORRADOR: "bg-ink-700 text-ink-300",
+  ENVIADA: "bg-ink-700 text-ink-200",
+  CANCELADA: "bg-ink-800 text-ink-500",
+};
+
+const BADGE_COLORS = ["bg-amber-500/20 text-amber-400", "bg-success/20 text-success", "bg-danger/20 text-danger"];
+
+function badgeColor(name: string) {
+  const index = name.charCodeAt(0) % BADGE_COLORS.length;
+  return BADGE_COLORS[index];
+}
+
+export function RecentInvoicesTable({ rows }: { rows: RecentInvoiceRow[] }) {
+  if (rows.length === 0) {
+    return <p className="px-6 py-10 text-center text-sm text-ink-500">Aún no has creado ninguna factura.</p>;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-ink-800/60 text-left text-xs text-ink-400">
+            <th className="px-6 py-3 font-medium">Cliente</th>
+            <th className="px-6 py-3 font-medium">Número</th>
+            <th className="px-6 py-3 font-medium">Fecha</th>
+            <th className="px-6 py-3 font-medium">Importe</th>
+            <th className="px-6 py-3 font-medium">Estado</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-ink-800/40">
+          {rows.map((row) => (
+            <tr key={row.id} className="transition-colors duration-fast hover:bg-white/[0.02]">
+              <td className="px-6 py-3.5">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold",
+                      badgeColor(row.clientName)
+                    )}
+                  >
+                    {row.clientName.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="font-medium text-ink-100">{row.clientName}</span>
+                </div>
+              </td>
+              <td className="px-6 py-3.5 font-mono text-xs text-ink-400">{row.number}</td>
+              <td className="px-6 py-3.5 text-ink-400">{formatDate(row.date)}</td>
+              <td className="px-6 py-3.5 num font-medium text-ink-50">
+                {formatCurrency(row.total, row.currency)}
+              </td>
+              <td className="px-6 py-3.5">
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+                    STATUS_STYLES[row.status] ?? "bg-ink-800 text-ink-300"
+                  )}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                  {row.status}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

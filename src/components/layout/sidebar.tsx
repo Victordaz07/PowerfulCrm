@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -27,9 +28,19 @@ export function Sidebar() {
   return (
     <aside className="flex h-screen w-60 flex-col border-r border-ink-800 bg-ink-900">
       <div className="flex items-center justify-between px-4 py-4">
-        <span className="text-sm font-semibold tracking-tight text-ink-50">
-          FreelanceHub
-        </span>
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <Image
+            src="/logo/freelancehub-symbol.png"
+            alt="FreelanceHub"
+            width={20}
+            height={20}
+            className="shrink-0"
+            priority
+          />
+          <span className="text-sm font-semibold tracking-tight text-ink-50">
+            FreelanceHub
+          </span>
+        </Link>
         <OrganizationSwitcher
           appearance={{ elements: { organizationSwitcherTrigger: "text-xs text-ink-400" } }}
         />

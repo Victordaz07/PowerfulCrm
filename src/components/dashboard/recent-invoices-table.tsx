@@ -33,7 +33,7 @@ export function RecentInvoicesTable({ rows }: { rows: RecentInvoiceRow[] }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full min-w-[560px] text-sm">
         <thead>
           <tr className="border-b border-ink-800/60 text-left text-xs text-ink-400">
             <th className="px-6 py-3 font-medium">Cliente</th>

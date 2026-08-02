@@ -33,8 +33,8 @@ export default async function FacturacionPage() {
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-ink-800">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-lg border border-ink-800">
+        <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-ink-800 bg-ink-900 text-left text-xs text-ink-400">
               <th className="px-4 py-3 font-medium">Folio</th>

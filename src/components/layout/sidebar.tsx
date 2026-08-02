@@ -25,7 +25,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-screen w-64 flex-shrink-0 flex-col border-r border-ink-800 bg-ink-900">
+    <aside className="hidden h-screen w-64 flex-shrink-0 flex-col border-r border-ink-800 bg-ink-900 md:flex">
       <div className="flex h-16 items-center gap-2 border-b border-ink-800/50 px-5">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image

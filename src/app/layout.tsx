@@ -2,9 +2,40 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://powerful-crm.vercel.app";
+const title = "FreelanceHub — CRM, proyectos y facturación";
+const description =
+  "Gestor de negocio todo en uno para freelancers y creadores independientes.";
+
 export const metadata: Metadata = {
-  title: "FreelanceHub — CRM, proyectos y facturación",
-  description: "Gestor de negocio todo en uno para freelancers y creadores independientes.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: title,
+    template: "%s · FreelanceHub",
+  },
+  description,
+  icons: {
+    icon: [
+      { url: "/icons/favicon.ico", sizes: "any" },
+      { url: "/icons/app-icon-1024.png", type: "image/png", sizes: "1024x1024" },
+    ],
+    apple: [{ url: "/icons/app-icon-1024.png", sizes: "1024x1024" }],
+  },
+  openGraph: {
+    title,
+    description,
+    url: siteUrl,
+    siteName: "FreelanceHub",
+    images: [{ url: "/social/og-image.png", width: 1200, height: 630, alt: title }],
+    locale: "es_ES",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: ["/social/og-image.png"],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

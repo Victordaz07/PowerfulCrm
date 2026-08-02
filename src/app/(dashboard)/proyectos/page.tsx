@@ -3,6 +3,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { Plus } from "lucide-react";
+import Image from "next/image";
 
 export default async function ProyectosPage() {
   const { db } = await getTenantDb();
@@ -25,7 +26,14 @@ export default async function ProyectosPage() {
       </div>
 
       {projects.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-ink-800 p-12 text-center">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-ink-800 py-16 text-center">
+          <Image
+            src="/illustrations/empty-projects.png"
+            alt=""
+            width={160}
+            height={160}
+            className="mb-4"
+          />
           <p className="text-sm text-ink-300">Aún no tienes proyectos activos.</p>
           <p className="mt-1 text-xs text-ink-500">
             Crea uno desde la ficha de un cliente para empezar a asignar tareas.

@@ -1,17 +1,19 @@
 import { getTenantDb } from "@/lib/tenant";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
-import { Plus } from "lucide-react";
 import Image from "next/image";
+import { NewProjectDialog } from "@/components/proyectos/new-project-dialog";
 
 export default async function ProyectosPage() {
   const { db } = await getTenantDb();
-  const projects = await db.project.findMany({
-    where: { status: "ACTIVO" },
-    include: { client: true, tasks: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [projects, clients] = await Promise.all([
+    db.project.findMany({
+      where: { status: "ACTIVO" },
+      include: { client: true, tasks: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    db.client.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
 
   return (
     <div className="p-8">
@@ -20,9 +22,7 @@ export default async function ProyectosPage() {
           <h1 className="text-xl font-semibold text-ink-50">Proyectos</h1>
           <p className="text-sm text-ink-400">{projects.length} proyectos activos</p>
         </div>
-        <Button size="sm">
-          <Plus size={14} /> Nuevo proyecto
-        </Button>
+        <NewProjectDialog clients={clients} />
       </div>
 
       {projects.length === 0 ? (

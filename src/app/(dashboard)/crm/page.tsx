@@ -1,9 +1,9 @@
 import { getTenantDb } from "@/lib/tenant";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import { Plus } from "lucide-react";
 import Image from "next/image";
+import { NewClientDialog } from "@/components/crm/new-client-dialog";
+import { NewLeadDialog } from "@/components/crm/new-lead-dialog";
 
 const STAGES = [
   { key: "NUEVO", label: "Nuevo" },
@@ -15,11 +15,14 @@ const STAGES = [
 
 export default async function CrmPage() {
   const { db } = await getTenantDb();
-  const leads = await db.lead.findMany({
-    where: { stage: { not: "PERDIDO" } },
-    include: { client: true },
-    orderBy: { updatedAt: "desc" },
-  });
+  const [leads, clients] = await Promise.all([
+    db.lead.findMany({
+      where: { stage: { not: "PERDIDO" } },
+      include: { client: true },
+      orderBy: { updatedAt: "desc" },
+    }),
+    db.client.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
 
   const byStage = Object.fromEntries(
     STAGES.map((s) => [s.key, leads.filter((l) => l.stage === s.key)])
@@ -32,9 +35,10 @@ export default async function CrmPage() {
           <h1 className="text-xl font-semibold text-ink-50">Clientes y pipeline</h1>
           <p className="text-sm text-ink-400">Arrastra una tarjeta para cambiarla de etapa.</p>
         </div>
-        <Button size="sm">
-          <Plus size={14} /> Nuevo lead
-        </Button>
+        <div className="flex gap-2">
+          <NewClientDialog />
+          <NewLeadDialog clients={clients} />
+        </div>
       </div>
 
       {leads.length === 0 ? (

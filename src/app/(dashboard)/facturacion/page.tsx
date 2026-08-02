@@ -1,8 +1,7 @@
 import { getTenantDb } from "@/lib/tenant";
-import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import { Plus } from "lucide-react";
 import Image from "next/image";
+import { NewInvoiceDialog } from "@/components/facturacion/new-invoice-dialog";
 
 const STATUS_STYLES: Record<string, string> = {
   PAGADA: "bg-success/15 text-success",
@@ -15,11 +14,15 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default async function FacturacionPage() {
   const { db } = await getTenantDb();
-  const invoices = await db.invoice.findMany({
-    include: { client: true },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-  });
+  const [invoices, clients, projects] = await Promise.all([
+    db.invoice.findMany({
+      include: { client: true },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    db.client.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.project.findMany({ where: { status: "ACTIVO" }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
 
   return (
     <div className="p-8">
@@ -28,9 +31,7 @@ export default async function FacturacionPage() {
           <h1 className="text-xl font-semibold text-ink-50">Facturación</h1>
           <p className="text-sm text-ink-400">Cotizaciones, facturas y estado de pago.</p>
         </div>
-        <Button size="sm">
-          <Plus size={14} /> Nueva factura
-        </Button>
+        <NewInvoiceDialog clients={clients} projects={projects} />
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-ink-800">

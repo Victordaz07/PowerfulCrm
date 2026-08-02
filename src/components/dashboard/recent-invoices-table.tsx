@@ -12,14 +12,14 @@ export interface RecentInvoiceRow {
 
 const STATUS_STYLES: Record<string, string> = {
   PAGADA: "bg-success/15 text-success",
-  PENDIENTE: "bg-amber-500/15 text-amber-400",
+  PENDIENTE: "bg-warning/15 text-warning",
   VENCIDA: "bg-danger/15 text-danger",
   BORRADOR: "bg-ink-700 text-ink-300",
   ENVIADA: "bg-ink-700 text-ink-200",
   CANCELADA: "bg-ink-800 text-ink-500",
 };
 
-const BADGE_COLORS = ["bg-amber-500/20 text-amber-400", "bg-success/20 text-success", "bg-danger/20 text-danger"];
+const BADGE_COLORS = ["bg-primary-500/20 text-primary-400", "bg-success/20 text-success", "bg-danger/20 text-danger"];
 
 function badgeColor(name: string) {
   const index = name.charCodeAt(0) % BADGE_COLORS.length;

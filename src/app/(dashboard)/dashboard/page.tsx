@@ -261,7 +261,7 @@ export default async function DashboardPage() {
               {paidInvoicesCount} de {totalInvoicesCount} facturas totales
             </p>
             <div className="flex items-center justify-center">
-              <ProgressRing percent={paidRatio} label="Facturas pagadas" tone="amber" />
+              <ProgressRing percent={paidRatio} label="Facturas pagadas" tone="primary" />
             </div>
           </div>
           <div className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
@@ -281,7 +281,7 @@ export default async function DashboardPage() {
           <div className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
             <h4 className="mb-1 text-sm font-medium text-ink-50">Leads nuevos</h4>
             <p className="mb-2 text-xs text-ink-400">Por semana</p>
-            <MiniSparkline data={newLeadsSpark} tone="amber" />
+            <MiniSparkline data={newLeadsSpark} tone="primary" />
           </div>
         </div>
       </section>

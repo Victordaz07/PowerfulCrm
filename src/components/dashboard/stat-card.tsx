@@ -15,8 +15,8 @@ interface StatCardProps {
 
 const ICON_TONE_STYLES: Record<NonNullable<StatCardProps["iconTone"]>, string> = {
   success: "bg-success/15 text-success",
-  primary: "bg-amber-500/15 text-amber-400",
-  warning: "bg-amber-500/15 text-amber-400",
+  primary: "bg-primary-500/15 text-primary-400",
+  warning: "bg-warning/15 text-warning",
   danger: "bg-danger/15 text-danger",
   neutral: "bg-ink-700 text-ink-300",
 };

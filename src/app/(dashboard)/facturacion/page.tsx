@@ -6,7 +6,7 @@ import Image from "next/image";
 
 const STATUS_STYLES: Record<string, string> = {
   PAGADA: "bg-success/15 text-success",
-  PENDIENTE: "bg-amber-500/15 text-amber-400",
+  PENDIENTE: "bg-warning/15 text-warning",
   VENCIDA: "bg-danger/15 text-danger",
   BORRADOR: "bg-ink-700 text-ink-300",
   ENVIADA: "bg-ink-700 text-ink-200",

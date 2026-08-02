@@ -24,13 +24,18 @@ body {
 
 /* foco visible siempre — accesibilidad, no opcional */
 :focus-visible {
-  outline: 2px solid theme("colors.amber.400");
+  outline: 2px solid theme("colors.primary.400");
   outline-offset: 2px;
 }
 
 /* skeleton loader — usado en toda la app en vez de spinners para contenido */
 .skeleton {
   @apply animate-pulse rounded-md bg-ink-800;
+}
+
+/* panel translúcido con blur — usado en cards de dashboard, sidebar, header */
+.glass-panel {
+  @apply border border-ink-800/60 bg-ink-900/70 backdrop-blur-md;
 }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }

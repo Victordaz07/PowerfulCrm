@@ -3,21 +3,21 @@ import { cn } from "@/lib/utils";
 interface ProgressRingProps {
   percent: number;
   label: string;
-  tone?: "amber" | "success";
+  tone?: "primary" | "success";
   size?: number;
   strokeWidth?: number;
   className?: string;
 }
 
 const TONE_STROKE: Record<NonNullable<ProgressRingProps["tone"]>, string> = {
-  amber: "stroke-amber-500",
+  primary: "stroke-primary-500",
   success: "stroke-success",
 };
 
 export function ProgressRing({
   percent,
   label,
-  tone = "amber",
+  tone = "primary",
   size = 120,
   strokeWidth = 10,
   className,

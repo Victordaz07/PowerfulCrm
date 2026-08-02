@@ -9,7 +9,7 @@ export interface UpcomingItem {
 }
 
 const DOT_TONE: Record<UpcomingItem["tone"], string> = {
-  primary: "bg-amber-500",
+  primary: "bg-primary-500",
   neutral: "bg-ink-500",
   danger: "bg-danger",
 };

@@ -23,20 +23,20 @@ export function IncomeTrendChart({ data, currency }: IncomeTrendChartProps) {
       <AreaChart data={data} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#D6820F" stopOpacity={0.35} />
-            <stop offset="100%" stopColor="#D6820F" stopOpacity={0} />
+            <stop offset="0%" stopColor="#7C3AED" stopOpacity={0.35} />
+            <stop offset="100%" stopColor="#7C3AED" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid stroke="#262C3A" vertical={false} />
+        <CartesianGrid stroke="#2D3748" vertical={false} />
         <XAxis
           dataKey="month"
-          stroke="#8B93A6"
+          stroke="#A0AEC0"
           fontSize={11}
           tickLine={false}
           axisLine={false}
         />
         <YAxis
-          stroke="#8B93A6"
+          stroke="#A0AEC0"
           fontSize={11}
           tickLine={false}
           axisLine={false}
@@ -46,18 +46,18 @@ export function IncomeTrendChart({ data, currency }: IncomeTrendChartProps) {
         <Tooltip
           formatter={(value: number) => [formatShort(value, currency), "Ingresos"]}
           contentStyle={{
-            background: "#1B202C",
-            border: "1px solid #262C3A",
+            background: "#161D31",
+            border: "1px solid #2D3748",
             borderRadius: 8,
             fontSize: 12,
-            color: "#F0F2F5",
+            color: "#F8FAFC",
           }}
-          labelStyle={{ color: "#8B93A6" }}
+          labelStyle={{ color: "#A0AEC0" }}
         />
         <Area
           type="monotone"
           dataKey="total"
-          stroke="#D6820F"
+          stroke="#7C3AED"
           strokeWidth={2.5}
           fill="url(#incomeFill)"
         />

@@ -53,7 +53,7 @@ export default async function ProyectosPage() {
                 <CardContent>
                   <div className="mb-2 h-1.5 w-full rounded-full bg-ink-800">
                     <div
-                      className="h-1.5 rounded-full bg-amber-500 transition-all duration-fast"
+                      className="h-1.5 rounded-full bg-primary-500 transition-all duration-fast"
                       style={{ width: `${pct}%` }}
                     />
                   </div>

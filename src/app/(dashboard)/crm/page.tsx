@@ -73,7 +73,7 @@ export default async function CrmPage() {
                       <p className="text-sm font-medium text-ink-100">{lead.title}</p>
                       <p className="text-xs text-ink-400">{lead.client?.name}</p>
                       {lead.value && (
-                        <p className="mt-2 text-xs font-medium text-amber-400">
+                        <p className="mt-2 text-xs font-medium text-primary-400">
                           {formatCurrency(Number(lead.value))}
                         </p>
                       )}

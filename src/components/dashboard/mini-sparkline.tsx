@@ -4,15 +4,15 @@ import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
 interface MiniSparklineProps {
   data: { label: string; value: number }[];
-  tone?: "amber" | "success";
+  tone?: "primary" | "success";
 }
 
 const TONE_COLORS: Record<NonNullable<MiniSparklineProps["tone"]>, string> = {
-  amber: "#D6820F",
-  success: "#2F9E67",
+  primary: "#7C3AED",
+  success: "#10B981",
 };
 
-export function MiniSparkline({ data, tone = "amber" }: MiniSparklineProps) {
+export function MiniSparkline({ data, tone = "primary" }: MiniSparklineProps) {
   const color = TONE_COLORS[tone];
   const gradientId = `spark-${tone}`;
 

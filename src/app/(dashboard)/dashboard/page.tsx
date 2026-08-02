@@ -12,6 +12,14 @@ import { es } from "date-fns/locale";
 
 const CURRENCY = "MXN";
 
+const TYPE_LABEL: Record<string, string> = {
+  REUNION: "Reunión",
+  LLAMADA: "Llamada",
+  ENTREGA: "Entrega",
+  RECORDATORIO: "Recordatorio",
+  OTRO: "Evento",
+};
+
 function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
@@ -38,6 +46,7 @@ export default async function DashboardPage() {
     paidInvoicesForTrend,
     tasksForTimeline,
     invoicesForTimeline,
+    eventsForTimeline,
     recentLeads,
     recentInvoices,
   ] = await Promise.all([
@@ -71,6 +80,12 @@ export default async function DashboardPage() {
       where: { status: { in: ["PENDIENTE", "ENVIADA", "VENCIDA"] }, dueDate: { not: null } },
       include: { client: true },
       orderBy: { dueDate: "asc" },
+      take: 5,
+    }),
+    db.event.findMany({
+      where: { startAt: { gte: now }, status: { not: "CANCELADO" } },
+      include: { client: true },
+      orderBy: { startAt: "asc" },
       take: 5,
     }),
     db.lead.findMany({
@@ -171,6 +186,21 @@ export default async function DashboardPage() {
         subtitle: `${isPast ? "Venció" : "Vence"} · ${inv.client.name}`,
         date: formatDate(inv.dueDate),
         tone: isPast ? "danger" : "primary",
+      },
+    });
+  }
+
+  for (const event of eventsForTimeline) {
+    ranked.push({
+      date: event.startAt,
+      item: {
+        id: `event-${event.id}`,
+        title: event.title,
+        subtitle: event.client?.name ? `${TYPE_LABEL[event.type]} · ${event.client.name}` : TYPE_LABEL[event.type],
+        date: event.allDay
+          ? formatDate(event.startAt)
+          : `${formatDate(event.startAt)}, ${format(event.startAt, "HH:mm")}`,
+        tone: "primary",
       },
     });
   }

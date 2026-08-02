@@ -96,3 +96,51 @@ export const remindOverdueInvoices = inngest.createFunction(
     return { markedOverdue: overdue.length };
   }
 );
+
+/**
+ * Corre cada hora: avisa por email de los eventos de calendario que
+ * empiezan en la próxima hora. `reminderSentAt` evita reenviar el
+ * mismo recordatorio si el cron vuelve a correr sobre el mismo evento.
+ */
+export const remindUpcomingEvents = inngest.createFunction(
+  { id: "remind-upcoming-events" },
+  { cron: "0 * * * *" },
+  async ({ step }) => {
+    const upcoming = await step.run("find-upcoming-events", () => {
+      const now = new Date();
+      const inOneHour = new Date(now.getTime() + 60 * 60 * 1000);
+      return rawPrisma.event.findMany({
+        where: {
+          startAt: { gte: now, lte: inOneHour },
+          reminderSentAt: null,
+          status: { not: "CANCELADO" },
+        },
+        include: { tenant: { include: { users: true } }, client: true },
+      });
+    });
+
+    for (const event of upcoming) {
+      const recipients = event.tenant.users.map((u) => u.email).filter((email): email is string => Boolean(email));
+      if (recipients.length === 0) continue;
+
+      await step.run(`notify-${event.id}`, async () => {
+        const time = new Date(event.startAt).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+        await getResend().emails.send({
+          from: "agenda@tu-dominio.com",
+          to: recipients,
+          subject: `Recordatorio: ${event.title} a las ${time}`,
+          text: [
+            `Tu evento "${event.title}" empieza a las ${time}.`,
+            event.client ? `Con: ${event.client.name}.` : null,
+            event.location ? `Ubicación/link: ${event.location}.` : null,
+          ]
+            .filter(Boolean)
+            .join(" "),
+        });
+        await rawPrisma.event.update({ where: { id: event.id }, data: { reminderSentAt: new Date() } });
+      });
+    }
+
+    return { reminded: upcoming.length };
+  }
+);

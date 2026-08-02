@@ -80,19 +80,20 @@ npm run dev
 - Modelo de datos completo (`prisma/schema.prisma`) con `tenant_id` en cada tabla.
 - Aislamiento multi-tenant con RLS (`prisma/rls.sql`) + extensión de Prisma que fija el tenant vía `set_config` dentro de una transacción (obligatorio con el pooling de Neon — ver comentarios en `src/lib/prisma.ts`).
 - Helper `getTenantDb()` que conecta Clerk Organizations con el tenant activo.
-- UI base: sidebar de navegación, dashboard con métricas reales, pipeline kanban de CRM, listado de proyectos con progreso, tabla de facturación.
+- UI base: sidebar de navegación (con nav móvil), dashboard con métricas reales, pipeline kanban de CRM, listado de proyectos con progreso, tabla de facturación.
+- **Calendario** (`prisma` model `Event`): agenda mensual vinculada a cliente/proyecto/lead, creación vía Server Action + Radix Dialog, recordatorio por email 1h antes vía Inngest, y los eventos próximos ya aparecen en "Próximos compromisos" del dashboard.
 - Generación de PDF de facturas del lado del servidor.
 - Webhook de Stripe que marca facturas como pagadas.
-- Dos jobs de Inngest: facturas recurrentes y recordatorios de vencimiento.
-- Sistema de diseño propio (paleta "ink + amber", no los defaults genéricos de IA) en `tailwind.config.ts`.
+- Tres jobs de Inngest: facturas recurrentes, recordatorios de facturas vencidas, recordatorios de eventos de calendario.
+- Sistema de diseño propio (paleta "ink + violeta", glass panels) en `tailwind.config.ts`.
 
 ## Qué falta construir (siguiente paso lógico, en orden)
 
-1. **Formularios de creación/edición** (cliente, lead, proyecto, tarea, factura) — usa Server Actions + `zod` para validar.
+1. **Formularios de creación/edición** (cliente, lead, proyecto, tarea, factura) — usa Server Actions + `zod` para validar, mismo patrón que ya usa `src/app/(dashboard)/calendario/actions.ts`.
 2. **Drag-and-drop real** en el kanban de CRM y de tareas — `dnd-kit` + mutación optimista de TanStack Query (`onMutate` → actualiza caché al instante → `onError` hace rollback).
-3. **Command palette** (Cmd+K) con `cmdk` — ya hay un botón placeholder en el sidebar (`data-command-trigger`).
+3. **Command palette** (Cmd+K) con `cmdk` — ya hay un botón placeholder en el header (`data-command-trigger`).
 4. **Checkout de Stripe** desde el botón "Cobrar" de una factura (crear Checkout Session con `metadata.invoiceId`).
-5. **Calendario/agendamiento** — evalúa embeber Cal.diy (antes Cal.com self-hosted) en vez de construir el motor desde cero.
+5. **Auto-agendamiento público para clientes** (Fase 2 del calendario): página pública tipo Calendly para que un cliente reserve un horario. No construir disponibilidad/timezone/sync externo a mano — evaluar el Booker embebido de Cal.com (de pago). **No usar Cal.diy**: desde abril 2026 es un fork comunitario sin soporte, pensado solo para uso personal, no para producción con clientes pagando.
 6. **Onboarding** (`/onboarding`): flujo para crear la primera organización/tenant en Clerk.
 7. **Multi-moneda y cálculo de impuestos** por país.
 8. **Empty/loading/error states** diseñados para cada vista (usa `loading.tsx` de Next.js + skeletons, ya hay la clase `.skeleton` en `globals.css`).

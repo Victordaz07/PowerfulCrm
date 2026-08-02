@@ -4,7 +4,12 @@
 --   psql $DIRECT_URL -f prisma/rls.sql
 -- ─────────────────────────────────────────────────────────────
 
--- Tablas con tenant_id que deben quedar protegidas por RLS
+-- Tablas con tenantId que deben quedar protegidas por RLS.
+-- OJO: el schema de Prisma nunca mapeó el campo `tenantId` a snake_case
+-- (no hay @map("tenant_id") en ningún modelo), así que la columna real
+-- en Postgres queda en camelCase — "tenantId", entrecomillada — aunque
+-- el nombre de la TABLA sí está mapeado a snake_case vía @@map(...).
+-- Si esto se vuelve a romper, comparar contra prisma/migrations/*/migration.sql.
 DO $$
 DECLARE
   t text;
@@ -23,16 +28,16 @@ BEGIN
 
     EXECUTE format(
       'CREATE POLICY tenant_isolation ON %I
-         USING (tenant_id = current_setting(''app.current_tenant'', true))
-         WITH CHECK (tenant_id = current_setting(''app.current_tenant'', true));',
+         USING ("tenantId" = current_setting(''app.current_tenant'', true))
+         WITH CHECK ("tenantId" = current_setting(''app.current_tenant'', true));',
       t
     );
   END LOOP;
 END $$;
 
--- invoice_items no tiene tenant_id propio (cuelga de invoices),
+-- invoice_items no tiene tenantId propio (cuelga de invoices),
 -- así que se protege vía join implícito en la aplicación + FK cascade.
--- Si se necesita RLS directo ahí también, añadir tenant_id denormalizado.
+-- Si se necesita RLS directo ahí también, añadir tenantId denormalizado.
 
 -- Rol de aplicación: usa esta conexión desde Prisma en runtime.
 -- El rol de migraciones (DIRECT_URL, dueño de las tablas) SÍ puede

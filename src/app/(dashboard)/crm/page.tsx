@@ -1,31 +1,36 @@
 import { getTenantDb } from "@/lib/tenant";
+import { isTenantAdmin } from "@/lib/authz";
 import Image from "next/image";
 import { NewClientDialog } from "@/components/crm/new-client-dialog";
 import { NewLeadDialog } from "@/components/crm/new-lead-dialog";
-import { LeadCard } from "@/components/crm/lead-card";
-
-const STAGES = [
-  { key: "NUEVO", label: "Nuevo" },
-  { key: "CONTACTADO", label: "Contactado" },
-  { key: "PROPUESTA_ENVIADA", label: "Propuesta enviada" },
-  { key: "NEGOCIACION", label: "Negociación" },
-  { key: "GANADO", label: "Ganado" },
-] as const;
+import { KanbanBoard } from "@/components/crm/kanban-board";
+import { EditClientDialog } from "@/components/crm/edit-client-dialog";
+import { ConfirmDeleteButton } from "@/components/ui/confirm-delete-button";
+import { deleteClient } from "./actions";
 
 export default async function CrmPage() {
   const { db } = await getTenantDb();
-  const [leads, clients] = await Promise.all([
+  const [leads, clients, canDelete] = await Promise.all([
     db.lead.findMany({
       where: { stage: { not: "PERDIDO" } },
       include: { client: true },
       orderBy: { updatedAt: "desc" },
     }),
-    db.client.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.client.findMany({ orderBy: { name: "asc" } }),
+    isTenantAdmin(),
   ]);
 
-  const byStage = Object.fromEntries(
-    STAGES.map((s) => [s.key, leads.filter((l) => l.stage === s.key)])
-  );
+  const clientOptions = clients.map((c) => ({ id: c.id, name: c.name }));
+  const kanbanLeads = leads.map((l) => ({
+    id: l.id,
+    title: l.title,
+    value: l.value ? Number(l.value) : null,
+    stage: l.stage,
+    source: l.source,
+    notes: l.notes,
+    clientId: l.clientId,
+    clientName: l.client?.name ?? null,
+  }));
 
   return (
     <div className="p-8">
@@ -36,8 +41,49 @@ export default async function CrmPage() {
         </div>
         <div className="flex gap-2">
           <NewClientDialog />
-          <NewLeadDialog clients={clients} />
+          <NewLeadDialog clients={clientOptions} />
         </div>
+      </div>
+
+      {/* Lista de clientes */}
+      <div className="mb-8 overflow-x-auto rounded-lg border border-ink-800">
+        <table className="w-full min-w-[520px] text-sm">
+          <thead>
+            <tr className="border-b border-ink-800 bg-ink-900 text-left text-xs text-ink-400">
+              <th className="px-4 py-3 font-medium">Cliente</th>
+              <th className="px-4 py-3 font-medium">Contacto</th>
+              <th className="px-4 py-3 font-medium">Empresa</th>
+              <th className="px-4 py-3 font-medium"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {clients.map((c) => (
+              <tr
+                key={c.id}
+                className="group border-b border-ink-800 last:border-0 hover:bg-ink-900/60 transition-colors duration-fast"
+              >
+                <td className="px-4 py-3 font-medium text-ink-100">{c.name}</td>
+                <td className="px-4 py-3 text-ink-400">{c.email || c.phone || "—"}</td>
+                <td className="px-4 py-3 text-ink-400">{c.company || "—"}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-3 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                    <EditClientDialog client={c} />
+                    {canDelete && (
+                      <ConfirmDeleteButton action={deleteClient} id={c.id} itemLabel={c.name} />
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {clients.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-8 text-center text-xs text-ink-500">
+                  Aún no tienes clientes registrados.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {leads.length === 0 ? (
@@ -55,39 +101,7 @@ export default async function CrmPage() {
           </p>
         </div>
       ) : (
-        /* Nota de implementación: el drag-and-drop real se conecta con
-           dnd-kit + una mutación optimista de TanStack Query que actualiza
-           la caché al instante y hace rollback si el servidor falla.
-           Este componente de servidor renderiza el estado inicial;
-           la interactividad vive en un client component hermano. */
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {STAGES.map((stage) => (
-            <div key={stage.key} className="w-72 flex-shrink-0">
-              <div className="mb-2 flex items-center justify-between px-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-ink-400">
-                  {stage.label}
-                </span>
-                <span className="text-xs text-ink-500">{byStage[stage.key].length}</span>
-              </div>
-              <div className="space-y-2">
-                {byStage[stage.key].map((lead, index) => (
-                  <LeadCard
-                    key={lead.id}
-                    title={lead.title}
-                    clientName={lead.client?.name}
-                    value={lead.value ? Number(lead.value) : null}
-                    index={index}
-                  />
-                ))}
-                {byStage[stage.key].length === 0 && (
-                  <div className="rounded-md border border-dashed border-ink-800 p-4 text-center text-xs text-ink-500">
-                    Sin leads aquí
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <KanbanBoard initialLeads={kanbanLeads} clients={clientOptions} canDelete={canDelete} />
       )}
     </div>
   );

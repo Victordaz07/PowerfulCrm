@@ -1,8 +1,11 @@
 "use server";
 
 import { getTenantDb } from "@/lib/tenant";
+import { requireTenantAdmin } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+
+const INVOICE_STATUSES = ["BORRADOR", "ENVIADA", "PENDIENTE", "PAGADA", "VENCIDA", "CANCELADA"] as const;
 
 const createInvoiceSchema = z.object({
   clientId: z.string().min(1, "Selecciona un cliente"),
@@ -101,6 +104,77 @@ export async function createInvoice(formData: FormData) {
     });
   }
 
+  revalidatePath("/facturacion");
+  revalidatePath("/dashboard");
+  return { error: null };
+}
+
+const updateInvoiceSchema = z.object({
+  id: z.string().min(1),
+  clientId: z.string().min(1, "Selecciona un cliente"),
+  projectId: z.string().optional(),
+  status: z.enum(INVOICE_STATUSES),
+  dueDate: z.string().optional(),
+});
+
+// Edición ligera: cliente, proyecto, estado y fecha de vencimiento.
+// Las líneas de la factura (y por tanto subtotal/total) no son
+// editables aquí a propósito — cambiarlas después de emitida rompería
+// la trazabilidad contable; para eso se crea una nueva factura o nota
+// de crédito.
+export async function updateInvoice(formData: FormData) {
+  const parsed = updateInvoiceSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
+  }
+  const data = parsed.data;
+
+  const { db } = await getTenantDb();
+  await db.invoice.update({
+    where: { id: data.id },
+    data: {
+      clientId: data.clientId,
+      projectId: data.projectId || null,
+      status: data.status,
+      paidAt: data.status === "PAGADA" ? new Date() : null,
+      dueDate: data.dueDate ? new Date(`${data.dueDate}T00:00:00`) : null,
+    },
+  });
+
+  revalidatePath("/facturacion");
+  revalidatePath("/dashboard");
+  return { error: null };
+}
+
+export async function updateInvoiceStatus(id: string, status: (typeof INVOICE_STATUSES)[number]) {
+  if (!INVOICE_STATUSES.includes(status)) return { error: "Estado inválido" };
+
+  const { db } = await getTenantDb();
+  await db.invoice.update({
+    where: { id },
+    data: { status, paidAt: status === "PAGADA" ? new Date() : null },
+  });
+
+  revalidatePath("/facturacion");
+  revalidatePath("/dashboard");
+  return { error: null };
+}
+
+export async function deleteInvoice(id: string) {
+  try {
+    await requireTenantAdmin();
+  } catch {
+    return { error: "No tienes permiso para eliminar facturas — se requiere rol de administrador." };
+  }
+
+  const { db } = await getTenantDb();
+  const invoice = await db.invoice.findUnique({ where: { id }, select: { status: true } });
+  if (invoice?.status === "PAGADA") {
+    return { error: "No se puede eliminar una factura ya pagada — cancélala en vez de borrarla." };
+  }
+
+  // InvoiceItem tiene onDelete: Cascade en su relación con Invoice.
+  await db.invoice.delete({ where: { id } });
   revalidatePath("/facturacion");
   revalidatePath("/dashboard");
   return { error: null };

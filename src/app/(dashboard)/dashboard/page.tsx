@@ -231,19 +231,19 @@ export default async function DashboardPage() {
         <StatCard
           label="Ingresos del mes"
           value={formatCurrency(paidThisMonth, CURRENCY)}
-          icon={Wallet}
+          icon={<Wallet size={20} strokeWidth={2} />}
           iconTone="success"
         />
         <StatCard
           label="Facturas pendientes"
           value={`${pendingInvoices} activas`}
-          icon={FileText}
+          icon={<FileText size={20} strokeWidth={2} />}
           iconTone="primary"
         />
         <StatCard
           label="Proyectos activos"
           value={`${activeProjects} activos`}
-          icon={KanbanSquare}
+          icon={<KanbanSquare size={20} strokeWidth={2} />}
           iconTone="neutral"
         />
       </section>

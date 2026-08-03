@@ -1,14 +1,19 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { LucideIcon } from "lucide-react";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { motion } from "motion/react";
+import type { ReactNode } from "react";
 
 interface StatCardProps {
   label: string;
   value: string;
-  icon?: LucideIcon;
+  // ReactNode (elemento ya renderizado), no el componente del ícono en sí:
+  // StatCard es Client Component, y una referencia a un componente (p.ej.
+  // el ícono de Lucide sin invocar) no es serializable cruzando el
+  // límite Server -> Client. El padre (Server Component) debe pasar
+  // `icon={<Wallet size={20} strokeWidth={2} />}` ya armado.
+  icon?: ReactNode;
   iconTone?: "success" | "primary" | "warning" | "danger" | "neutral";
   trend?: { value: string; direction: "up" | "down"; tone?: "success" | "danger" | "neutral" };
   hint?: string;
@@ -33,7 +38,7 @@ const TREND_TONE_STYLES: Record<NonNullable<NonNullable<StatCardProps["trend"]>[
 export function StatCard({
   label,
   value,
-  icon: Icon,
+  icon,
   iconTone = "primary",
   trend,
   hint,
@@ -51,10 +56,10 @@ export function StatCard({
         className
       )}
     >
-      {Icon ? (
+      {icon ? (
         <div className="flex items-center gap-4">
           <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", ICON_TONE_STYLES[iconTone])}>
-            <Icon size={20} strokeWidth={2} />
+            {icon}
           </div>
           <div className="min-w-0">
             <p className="mb-0.5 text-xs text-ink-400">{label}</p>

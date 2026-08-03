@@ -17,12 +17,13 @@ export async function getTenantDb() {
   if (!userId) redirect("/sign-in");
   if (!orgId) redirect("/onboarding"); // el usuario aún no pertenece a ningún tenant
 
-  // Aprovisionamiento perezoso: no existe (todavía) un webhook de Clerk
-  // que cree la fila en `tenants` cuando se crea una Organization, así
-  // que la garantizamos aquí en cada request. Es un upsert idempotente
-  // (no-op si ya existe) — barato comparado con dejar rotas todas las
-  // escrituras del tenant por una FK violation. orgId de Clerk === id
-  // de Tenant en nuestro modelo (1 org = 1 tenant).
+  // Red de seguridad: la vía principal de aprovisionamiento es el
+  // webhook `organization.created`/`organization.updated` de Clerk
+  // (ver src/app/api/webhooks/clerk/route.ts). Este upsert idempotente
+  // se deja aquí por si ese webhook falla, llega tarde, o no está
+  // configurado todavía en un entorno — barato comparado con dejar
+  // rotas todas las escrituras del tenant por una FK violation.
+  // orgId de Clerk === id de Tenant en nuestro modelo (1 org = 1 tenant).
   await rawPrisma.tenant.upsert({
     where: { id: orgId },
     update: {},

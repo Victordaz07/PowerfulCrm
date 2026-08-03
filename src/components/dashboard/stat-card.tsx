@@ -1,6 +1,9 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { motion } from "motion/react";
 
 interface StatCardProps {
   label: string;
@@ -38,7 +41,11 @@ export function StatCard({
   className,
 }: StatCardProps) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
       className={cn(
         "rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md",
         className
@@ -76,6 +83,6 @@ export function StatCard({
         </span>
       )}
       {hint && !trend && <span className="mt-2 inline-block text-[11px] text-ink-500">{hint}</span>}
-    </div>
+    </motion.div>
   );
 }

@@ -6,6 +6,7 @@ import { ProgressRing } from "@/components/dashboard/progress-ring";
 import { MiniSparkline } from "@/components/dashboard/mini-sparkline";
 import { UpcomingTimeline, type UpcomingItem } from "@/components/dashboard/upcoming-timeline";
 import { RecentInvoicesTable, type RecentInvoiceRow } from "@/components/dashboard/recent-invoices-table";
+import { FadeIn } from "@/components/ui/fade-in";
 import { Wallet, FileText, KanbanSquare } from "lucide-react";
 import { format, startOfMonth, subMonths, startOfWeek, subWeeks } from "date-fns";
 import { es } from "date-fns/locale";
@@ -248,7 +249,10 @@ export default async function DashboardPage() {
       </section>
 
       {/* Tendencia de ingresos */}
-      <section className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-6 backdrop-blur-md">
+      <FadeIn
+        delay={0.05}
+        className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-6 backdrop-blur-md"
+      >
         <div className="mb-2 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-base font-semibold text-ink-50">Tendencia de ingresos</h2>
@@ -256,7 +260,7 @@ export default async function DashboardPage() {
           </div>
         </div>
         <IncomeTrendChart data={revenueTrend} currency={CURRENCY} />
-      </section>
+      </FadeIn>
 
       {/* Dense stat row */}
       <section className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -279,13 +283,16 @@ export default async function DashboardPage() {
 
       {/* Timeline + métricas secundarias */}
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-6 backdrop-blur-md lg:col-span-5">
+        <FadeIn
+          delay={0.1}
+          className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-6 backdrop-blur-md lg:col-span-5"
+        >
           <h3 className="mb-6 text-sm font-semibold text-ink-50">Próximos compromisos</h3>
           <UpcomingTimeline items={upcomingItems} />
-        </div>
+        </FadeIn>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-7">
-          <div className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
+          <FadeIn delay={0.15} className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
             <h4 className="mb-1 text-sm font-medium text-ink-50">Facturas pagadas</h4>
             <p className="mb-4 text-xs text-ink-400">
               {paidInvoicesCount} de {totalInvoicesCount} facturas totales
@@ -293,8 +300,8 @@ export default async function DashboardPage() {
             <div className="flex items-center justify-center">
               <ProgressRing percent={paidRatio} label="Facturas pagadas" tone="primary" />
             </div>
-          </div>
-          <div className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
+          </FadeIn>
+          <FadeIn delay={0.15} className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
             <h4 className="mb-1 text-sm font-medium text-ink-50">Proyectos completados</h4>
             <p className="mb-4 text-xs text-ink-400">
               {completedProjectsCount} de {totalProjectsCount} proyectos totales
@@ -302,22 +309,22 @@ export default async function DashboardPage() {
             <div className="flex items-center justify-center">
               <ProgressRing percent={completedRatio} label="Proyectos completados" tone="success" />
             </div>
-          </div>
-          <div className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
+          </FadeIn>
+          <FadeIn delay={0.2} className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
             <h4 className="mb-1 text-sm font-medium text-ink-50">Facturas pagadas por mes</h4>
             <p className="mb-2 text-xs text-ink-400">Últimos 6 meses</p>
             <MiniSparkline data={paidInvoicesSpark} tone="success" />
-          </div>
-          <div className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
+          </FadeIn>
+          <FadeIn delay={0.2} className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
             <h4 className="mb-1 text-sm font-medium text-ink-50">Leads nuevos</h4>
             <p className="mb-2 text-xs text-ink-400">Por semana</p>
             <MiniSparkline data={newLeadsSpark} tone="primary" />
-          </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* Facturas recientes */}
-      <section className="rounded-2xl border border-ink-800/60 bg-ink-900/70 backdrop-blur-md">
+      <FadeIn delay={0.25} className="rounded-2xl border border-ink-800/60 bg-ink-900/70 backdrop-blur-md">
         <div className="flex items-center justify-between border-b border-ink-800/60 px-6 py-5">
           <h3 className="text-sm font-semibold text-ink-50">Facturas recientes</h3>
           <a href="/facturacion" className="text-xs text-ink-400 hover:text-ink-100">
@@ -325,7 +332,7 @@ export default async function DashboardPage() {
           </a>
         </div>
         <RecentInvoicesTable rows={recentInvoiceRows} />
-      </section>
+      </FadeIn>
     </div>
   );
 }

@@ -1,9 +1,8 @@
 import { getTenantDb } from "@/lib/tenant";
-import { Card, CardContent } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
 import Image from "next/image";
 import { NewClientDialog } from "@/components/crm/new-client-dialog";
 import { NewLeadDialog } from "@/components/crm/new-lead-dialog";
+import { LeadCard } from "@/components/crm/lead-card";
 
 const STAGES = [
   { key: "NUEVO", label: "Nuevo" },
@@ -71,18 +70,14 @@ export default async function CrmPage() {
                 <span className="text-xs text-ink-500">{byStage[stage.key].length}</span>
               </div>
               <div className="space-y-2">
-                {byStage[stage.key].map((lead) => (
-                  <Card key={lead.id} className="cursor-grab hover:border-ink-600 transition-colors duration-fast">
-                    <CardContent className="p-3">
-                      <p className="text-sm font-medium text-ink-100">{lead.title}</p>
-                      <p className="text-xs text-ink-400">{lead.client?.name}</p>
-                      {lead.value && (
-                        <p className="mt-2 text-xs font-medium text-primary-400">
-                          {formatCurrency(Number(lead.value))}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
+                {byStage[stage.key].map((lead, index) => (
+                  <LeadCard
+                    key={lead.id}
+                    title={lead.title}
+                    clientName={lead.client?.name}
+                    value={lead.value ? Number(lead.value) : null}
+                    index={index}
+                  />
                 ))}
                 {byStage[stage.key].length === 0 && (
                   <div className="rounded-md border border-dashed border-ink-800 p-4 text-center text-xs text-ink-500">

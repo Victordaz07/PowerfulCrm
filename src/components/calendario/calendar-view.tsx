@@ -30,9 +30,10 @@ interface CalendarViewProps {
   clients: { id: string; name: string }[];
   projects: { id: string; name: string }[];
   leads: { id: string; title: string }[];
+  canDeleteEvents: boolean;
 }
 
-export function CalendarView({ anchor, events, clients, projects, leads }: CalendarViewProps) {
+export function CalendarView({ anchor, events, clients, projects, leads, canDeleteEvents }: CalendarViewProps) {
   const anchorDate = parseISO(anchor);
   const monthStart = startOfMonth(anchorDate);
   const monthEnd = endOfMonth(anchorDate);
@@ -106,7 +107,7 @@ export function CalendarView({ anchor, events, clients, projects, leads }: Calen
               </span>
               <div className="w-full space-y-1 overflow-hidden">
                 {dayEvents.slice(0, 3).map((e) => (
-                  <EventPill key={e.id} event={e} />
+                  <EventPill key={e.id} event={e} canDelete={canDeleteEvents} />
                 ))}
                 {dayEvents.length > 3 && (
                   <span className="block text-[10px] text-ink-500">+{dayEvents.length - 3} más</span>

@@ -40,7 +40,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
+    // `dynamic` es obligatorio con contentSecurityPolicy.strict en el
+    // middleware (proxy.ts) — el nonce se genera por request, así que
+    // esto fuerza render dinámico de este layout (ya lo era en la
+    // práctica: todo lo que cuelga de (dashboard) usa auth()/cookies).
+    <ClerkProvider dynamic>
       <html lang="es">
         <body>{children}</body>
       </html>

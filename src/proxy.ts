@@ -21,12 +21,17 @@ export default clerkMiddleware(
     }
   },
   {
-    // CSP auto-generado por Clerk: incluye su FAPI, dominios de
-    // protección anti-abuso y (por defecto) los de Stripe. El checkout
-    // real es un redirect a checkout.stripe.com (ver
-    // api/webhooks/stripe/route.ts), no Stripe.js embebido, así que el
-    // modo "standard" alcanza sin necesitar directivas extra.
-    contentSecurityPolicy: {},
+    // CSP estricto: Clerk genera un nonce por request y lo propaga solo
+    // a <ClerkProvider> (requiere el prop `dynamic`, ver layout.tsx). No
+    // hay scripts inline propios en la app (grep verificado: sin
+    // next/script ni <script> a mano) y el checkout es un redirect a
+    // checkout.stripe.com (no Stripe.js embebido), así que el modo
+    // estricto no debería romper nada — pero es el cambio de más riesgo
+    // de esta pasada porque toca el flujo de login. Si algo se rompe en
+    // preview, revertir a `contentSecurityPolicy: {}` (modo standard).
+    contentSecurityPolicy: {
+      strict: true,
+    },
   }
 );
 

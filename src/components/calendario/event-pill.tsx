@@ -41,7 +41,7 @@ export function EventPill({ event, canDelete }: { event: CalendarEvent; canDelet
             startTransition(() => deleteEvent(event.id));
           }}
           disabled={isPending}
-          className="hidden shrink-0 text-ink-500 transition-colors hover:text-danger group-hover:block"
+          className="block shrink-0 text-ink-500 transition-colors hover:text-danger sm:hidden sm:group-hover:block sm:group-focus-within:block"
           aria-label={`Eliminar ${event.title}`}
         >
           <X size={10} />

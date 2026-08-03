@@ -6,12 +6,19 @@ import { ProgressRing } from "@/components/dashboard/progress-ring";
 import { MiniSparkline } from "@/components/dashboard/mini-sparkline";
 import { UpcomingTimeline, type UpcomingItem } from "@/components/dashboard/upcoming-timeline";
 import { RecentInvoicesTable, type RecentInvoiceRow } from "@/components/dashboard/recent-invoices-table";
+import { ActivityHeatmap } from "@/components/dashboard/activity-heatmap";
+import { RangeSelector } from "@/components/dashboard/range-selector";
 import { FadeIn } from "@/components/ui/fade-in";
 import { Wallet, FileText, KanbanSquare } from "lucide-react";
-import { format, startOfMonth, subMonths, startOfWeek, subWeeks } from "date-fns";
+import { format, startOfMonth, subMonths, startOfWeek, subWeeks, subDays, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 
 const CURRENCY = "MXN";
+const RANGE_OPTIONS = [3, 6, 12] as const;
+
+interface DashboardPageProps {
+  searchParams: Promise<{ range?: string }>;
+}
 
 const TYPE_LABEL: Record<string, string> = {
   REUNION: "Reunión",
@@ -25,13 +32,23 @@ function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage(props: DashboardPageProps) {
+  const searchParams = await props.searchParams;
+  const rangeMonths = RANGE_OPTIONS.includes(Number(searchParams.range) as (typeof RANGE_OPTIONS)[number])
+    ? (Number(searchParams.range) as (typeof RANGE_OPTIONS)[number])
+    : 6;
+
   const { db } = await getTenantDb();
   const now = new Date();
   const startThisMonth = startOfMonth(now);
   const startLastMonth = startOfMonth(subMonths(now, 1));
-  const sixMonthsAgo = startOfMonth(subMonths(now, 5));
+  const rangeStart = startOfMonth(subMonths(now, rangeMonths - 1));
+  // Mismo rango de meses, un año antes — la base de la comparativa
+  // mes a mes (p.ej. "junio 2026" se compara contra "junio 2025").
+  const previousPeriodStart = subMonths(rangeStart, 12);
+  const previousPeriodEndExclusive = subMonths(startOfMonth(now), 11); // = mes actual del año pasado + 1
   const sixWeeksAgo = startOfWeek(subWeeks(now, 5), { weekStartsOn: 1 });
+  const heatmapStart = startOfDay(subDays(now, 13 * 7));
 
   const [
     pendingInvoices,
@@ -45,11 +62,15 @@ export default async function DashboardPage() {
     totalProjectsCount,
     completedProjectsCount,
     paidInvoicesForTrend,
+    paidInvoicesForPreviousPeriod,
     tasksForTimeline,
     invoicesForTimeline,
     eventsForTimeline,
     recentLeads,
     recentInvoices,
+    invoicesForHeatmap,
+    eventsForHeatmap,
+    leadsForHeatmap,
   ] = await Promise.all([
     db.invoice.count({ where: { status: "PENDIENTE" } }),
     db.invoice.count({ where: { status: "VENCIDA" } }),
@@ -68,7 +89,11 @@ export default async function DashboardPage() {
     db.project.count(),
     db.project.count({ where: { status: "COMPLETADO" } }),
     db.invoice.findMany({
-      where: { status: "PAGADA", paidAt: { gte: sixMonthsAgo } },
+      where: { status: "PAGADA", paidAt: { gte: rangeStart } },
+      select: { total: true, paidAt: true },
+    }),
+    db.invoice.findMany({
+      where: { status: "PAGADA", paidAt: { gte: previousPeriodStart, lt: previousPeriodEndExclusive } },
       select: { total: true, paidAt: true },
     }),
     db.task.findMany({
@@ -98,6 +123,18 @@ export default async function DashboardPage() {
       orderBy: { createdAt: "desc" },
       take: 5,
     }),
+    db.invoice.findMany({
+      where: { createdAt: { gte: heatmapStart } },
+      select: { createdAt: true },
+    }),
+    db.event.findMany({
+      where: { createdAt: { gte: heatmapStart } },
+      select: { createdAt: true },
+    }),
+    db.lead.findMany({
+      where: { createdAt: { gte: heatmapStart } },
+      select: { createdAt: true },
+    }),
   ]);
 
   // ── Ingresos del mes + variación vs. mes anterior ──────────────
@@ -124,10 +161,18 @@ export default async function DashboardPage() {
   const completedRatio =
     totalProjectsCount > 0 ? Math.round((completedProjectsCount / totalProjectsCount) * 100) : 0;
 
-  // ── Tendencia de ingresos (últimos 6 meses) + sparkline de facturas pagadas ──
-  const monthBuckets = Array.from({ length: 6 }, (_, idx) => {
-    const d = startOfMonth(subMonths(now, 5 - idx));
-    return { key: d.toISOString(), label: capitalize(format(d, "MMM", { locale: es })), total: 0, count: 0 };
+  // ── Tendencia de ingresos (rango seleccionado) + comparativa vs. mismo
+  //    período del año anterior + sparkline de facturas pagadas ──
+  const monthBuckets = Array.from({ length: rangeMonths }, (_, idx) => {
+    const d = startOfMonth(subMonths(now, rangeMonths - 1 - idx));
+    return {
+      key: d.toISOString(),
+      prevKey: subMonths(d, 12).toISOString(),
+      label: capitalize(format(d, "MMM", { locale: es })),
+      total: 0,
+      previousTotal: 0,
+      count: 0,
+    };
   });
   for (const inv of paidInvoicesForTrend) {
     if (!inv.paidAt) continue;
@@ -138,8 +183,19 @@ export default async function DashboardPage() {
       bucket.count += 1;
     }
   }
-  const revenueTrend = monthBuckets.map((b) => ({ month: b.label, total: Math.round(b.total) }));
+  for (const inv of paidInvoicesForPreviousPeriod) {
+    if (!inv.paidAt) continue;
+    const key = startOfMonth(inv.paidAt).toISOString();
+    const bucket = monthBuckets.find((b) => b.prevKey === key);
+    if (bucket) bucket.previousTotal += Number(inv.total);
+  }
+  const revenueTrend = monthBuckets.map((b) => ({
+    month: b.label,
+    total: Math.round(b.total),
+    previousTotal: Math.round(b.previousTotal),
+  }));
   const paidInvoicesSpark = monthBuckets.map((b) => ({ label: b.label, value: b.count }));
+  const hasPreviousPeriodData = monthBuckets.some((b) => b.previousTotal > 0);
 
   // ── Sparkline de leads nuevos por semana (últimas 6 semanas) ────
   const weekBuckets = Array.from({ length: 6 }, (_, idx) => {
@@ -152,6 +208,18 @@ export default async function DashboardPage() {
     if (bucket) bucket.value += 1;
   }
   const newLeadsSpark = weekBuckets.map((b) => ({ label: b.label, value: b.value }));
+
+  // ── Heatmap de actividad: facturas + eventos + leads creados por día,
+  //    últimas 14 semanas (estilo GitHub) ──
+  const dayCounts = new Map<string, number>();
+  for (const { createdAt } of [...invoicesForHeatmap, ...eventsForHeatmap, ...leadsForHeatmap]) {
+    const key = startOfDay(createdAt).toISOString();
+    dayCounts.set(key, (dayCounts.get(key) ?? 0) + 1);
+  }
+  const heatmapDays = Array.from({ length: 13 * 7 + 1 }, (_, idx) => {
+    const d = startOfDay(subDays(now, 13 * 7 - idx));
+    return { date: d.toISOString(), count: dayCounts.get(d.toISOString()) ?? 0 };
+  });
 
   // ── Próximos compromisos: tareas + facturas por vencer, vencidos primero ──
   type Ranked = { date: Date; item: UpcomingItem };
@@ -256,10 +324,18 @@ export default async function DashboardPage() {
         <div className="mb-2 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-base font-semibold text-ink-50">Tendencia de ingresos</h2>
-            <p className="mt-0.5 text-xs text-ink-400">Facturas cobradas por mes · últimos 6 meses</p>
+            <p className="mt-0.5 text-xs text-ink-400">
+              Facturas cobradas por mes
+              {hasPreviousPeriodData ? " · línea punteada = mismo período año anterior" : ""}
+            </p>
           </div>
+          <RangeSelector options={RANGE_OPTIONS} selected={rangeMonths} />
         </div>
-        <IncomeTrendChart data={revenueTrend} currency={CURRENCY} />
+        <IncomeTrendChart
+          data={revenueTrend}
+          currency={CURRENCY}
+          showComparison={hasPreviousPeriodData}
+        />
       </FadeIn>
 
       {/* Dense stat row */}
@@ -280,6 +356,20 @@ export default async function DashboardPage() {
           hint={overdueTasks > 0 ? "Prioridad alta" : "Sin pendientes"}
         />
       </section>
+
+      {/* Heatmap de actividad */}
+      <FadeIn
+        delay={0.08}
+        className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-6 backdrop-blur-md"
+      >
+        <div className="mb-4">
+          <h2 className="text-base font-semibold text-ink-50">Actividad</h2>
+          <p className="mt-0.5 text-xs text-ink-400">
+            Leads, facturas y eventos creados por día · últimas 14 semanas
+          </p>
+        </div>
+        <ActivityHeatmap days={heatmapDays} />
+      </FadeIn>
 
       {/* Timeline + métricas secundarias */}
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-12">

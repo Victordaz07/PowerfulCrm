@@ -1,8 +1,12 @@
 import { getTenantDb } from "@/lib/tenant";
+import { isTenantAdmin } from "@/lib/authz";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import Image from "next/image";
 import { NewInvoiceDialog } from "@/components/facturacion/new-invoice-dialog";
 import { CopyLinkButton } from "@/components/facturacion/copy-link-button";
+import { EditInvoiceDialog } from "@/components/facturacion/edit-invoice-dialog";
+import { ConfirmDeleteButton } from "@/components/ui/confirm-delete-button";
+import { deleteInvoice } from "./actions";
 
 const STATUS_STYLES: Record<string, string> = {
   PAGADA: "bg-success/15 text-success",
@@ -15,7 +19,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default async function FacturacionPage() {
   const { db } = await getTenantDb();
-  const [invoices, clients, projects] = await Promise.all([
+  const [invoices, clients, projects, canDelete] = await Promise.all([
     db.invoice.findMany({
       include: { client: true },
       orderBy: { createdAt: "desc" },
@@ -23,6 +27,7 @@ export default async function FacturacionPage() {
     }),
     db.client.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     db.project.findMany({ where: { status: "ACTIVO" }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    isTenantAdmin(),
   ]);
 
   return (
@@ -71,8 +76,25 @@ export default async function FacturacionPage() {
                     {inv.status}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <CopyLinkButton token={inv.publicToken} />
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-3">
+                    <CopyLinkButton token={inv.publicToken} />
+                    <EditInvoiceDialog
+                      invoice={{
+                        id: inv.id,
+                        number: inv.number,
+                        clientId: inv.clientId,
+                        projectId: inv.projectId,
+                        status: inv.status,
+                        dueDate: inv.dueDate ? inv.dueDate.toISOString().slice(0, 10) : null,
+                      }}
+                      clients={clients}
+                      projects={projects}
+                    />
+                    {canDelete && (
+                      <ConfirmDeleteButton action={deleteInvoice} id={inv.id} itemLabel={`factura ${inv.number}`} />
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.5.0",
+    "@dnd-kit/core": "^6.1.0",
     "@prisma/client": "^5.20.0",
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.2",

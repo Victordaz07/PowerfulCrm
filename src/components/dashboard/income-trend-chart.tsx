@@ -1,10 +1,11 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 interface IncomeTrendChartProps {
-  data: { month: string; total: number }[];
+  data: { month: string; total: number; previousTotal?: number }[];
   currency: string;
+  showComparison?: boolean;
 }
 
 function formatShort(value: number, currency: string) {
@@ -17,7 +18,7 @@ function formatShort(value: number, currency: string) {
   return formatter.format(value);
 }
 
-export function IncomeTrendChart({ data, currency }: IncomeTrendChartProps) {
+export function IncomeTrendChart({ data, currency, showComparison }: IncomeTrendChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <AreaChart data={data} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
@@ -44,7 +45,10 @@ export function IncomeTrendChart({ data, currency }: IncomeTrendChartProps) {
           width={64}
         />
         <Tooltip
-          formatter={(value: number) => [formatShort(value, currency), "Ingresos"]}
+          formatter={(value: number, name: string) => [
+            formatShort(value, currency),
+            name === "previousTotal" ? "Mismo mes, año anterior" : "Ingresos",
+          ]}
           contentStyle={{
             background: "#161D31",
             border: "1px solid #2D3748",
@@ -61,6 +65,16 @@ export function IncomeTrendChart({ data, currency }: IncomeTrendChartProps) {
           strokeWidth={2.5}
           fill="url(#incomeFill)"
         />
+        {showComparison && (
+          <Line
+            type="monotone"
+            dataKey="previousTotal"
+            stroke="#A0AEC0"
+            strokeWidth={1.5}
+            strokeDasharray="4 4"
+            dot={false}
+          />
+        )}
       </AreaChart>
     </ResponsiveContainer>
   );

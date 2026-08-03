@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Search } from "lucide-react";
 import { OrganizationSwitcher } from "@clerk/nextjs";
+import { CommandPalette } from "./command-palette";
 
 export function Header() {
   return (
@@ -16,18 +16,7 @@ export function Header() {
         />
       </Link>
 
-      <button
-        className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-ink-800 bg-ink-900 px-3 py-2 text-sm text-ink-400 transition-colors duration-fast hover:text-ink-100 sm:max-w-sm"
-        data-command-trigger
-      >
-        <Search size={15} className="shrink-0" />
-        <span className="hidden flex-1 truncate text-left sm:inline">
-          Buscar clientes, facturas…
-        </span>
-        <kbd className="ml-auto hidden rounded bg-ink-800 px-1.5 py-0.5 text-[10px] text-ink-500 sm:inline-block">
-          ⌘K
-        </kbd>
-      </button>
+      <CommandPalette />
 
       <OrganizationSwitcher
         appearance={{

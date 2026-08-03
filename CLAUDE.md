@@ -13,19 +13,13 @@ team `team_sLNo1ShZ17Eb3f09oaiQ91Zc`). Repo: github.com/Victordaz07/PowerfulCrm
 (el remoto local usa minúsculas y redirige, es normal, no romper nada
 por eso).
 
-### EN CURSO: upgrade Next.js 14 → 16
+### COMPLETADO: upgrade Next.js 14 → 16
 
-Rama: `claude/nextjs-16-upgrade` (creada desde la rama de producción,
-YA PUSHEADA, commit `55acb420b50d17f089bf9409f848227e139629a8`).
-**Todavía NO está mergeada a producción** — falta confirmación
-explícita del usuario antes de mergear (ver sección "Próximo paso").
-
-Preview deployment validado y READY:
-`https://powerful-crm-git-claude-n-dcc6ee-victor-ruizs-projects-2df6e656.vercel.app`
-— el flujo de sign-in de Clerk renderiza perfecto ahí (probado con
-Claude in Chrome), confirma que el publishableKey real de Vercel
-funciona y que `proxy.ts` (antes `middleware.ts`) sigue interceptando
-rutas correctamente.
+Mergeado a producción (el commit `55acb420` quedó como ancestro de
+`claude/multi-tenant-project-setup-vmanmh` antes de los merges de RBAC
+y de los bloques 2-4 de CRUD/analítica). Confirmado en vivo:
+`package.json` de la producción actual tiene `"next": "16.2.12"`,
+`"react": "19.2.8"`, deploy READY, cero errores en runtime logs.
 
 Qué se hizo en el upgrade:
 - `next` 14.2.35 → 16.2.12, `react`/`react-dom` 18.3.1 → 19.2.8.
@@ -79,27 +73,17 @@ Validación hecha:
 - Deploy de Preview en Vercel: READY, sign-in de Clerk renderiza
   correctamente con las env vars reales.
 
-### Próximo paso (para el siguiente agente o para mí mismo)
+### Estado general (2026-08-02, fin de sesión)
 
-1. Confirmar con el usuario (Victor) si quiere mergear
-   `claude/nextjs-16-upgrade` → `claude/multi-tenant-project-setup-vmanmh`.
-   **No mergear sin luz verde explícita** — toca auth y pagos en
-   producción real.
-2. Idealmente, antes de mergear: pedirle a Victor que haga login real
-   una vez en el link de Preview de arriba para confirmar que el
-   dashboard carga con sus datos reales (yo no tengo sus credenciales
-   de Clerk para probar el login real ni el flujo completo de
-   Server Actions/Stripe Checkout autenticado).
-3. Si aprueba: `git checkout claude/multi-tenant-project-setup-vmanmh
-   && git merge claude/nextjs-16-upgrade && git push`. Eso dispara el
-   deploy de producción automáticamente. Verificar con
-   `get_deployment`/`get_runtime_logs` después, igual que se hizo con
-   el portal de cliente.
-4. Después de mergear, task pendiente aparte: el `webhook
-   organization.created` de Clerk para provisionar tenants
-   automáticamente (hoy se hace con upsert perezoso dentro de
-   `getTenantDb()`, funciona pero es un parche, no la solución
-   "correcta" a mediano plazo).
+Todo lo planeado hasta ahora está en producción y verificado (deploy
+READY + cero runtime errors): CSP estricto, animaciones, RBAC
+(`isTenantAdmin`/`requireTenantAdmin`), webhook `organization.created`
+de Clerk (ya activo, el upsert perezoso en `getTenantDb()` quedó como
+fallback), CRUD completo de editar/eliminar en clientes/leads/
+proyectos/facturas, drag-and-drop real en el Kanban (`dnd-kit`),
+analítica con comparativa mensual + heatmap de actividad, búsqueda
+global (⌘K) y upgrade a Next.js 16. No hay ramas pendientes de
+mergear a producción en este momento.
 
 ## Convenciones del proyecto (para cualquier trabajo futuro)
 
@@ -139,16 +123,25 @@ Validación hecha:
   ningún lado. Cualquier Server Action nueva que borre datos o toque
   algo sensible (facturación, eliminar clientes/proyectos, gestión del
   equipo) debe llamar `requireTenantAdmin()` al inicio. Las acciones de
-  creación normal quedan abiertas a cualquier miembro a propósito. Hoy
-  solo `deleteEvent` usa este check — es la única acción destructiva
-  que existe en la app (no hay edit/delete de clientes, leads,
-  proyectos ni facturas todavía).
+  creación normal quedan abiertas a cualquier miembro a propósito. Ya
+  existe CRUD completo (editar/eliminar) de clientes, leads, proyectos
+  y facturas — `deleteEvent`, `deleteClient`, `deleteLead`,
+  `deleteProject` y `deleteInvoice` usan `requireTenantAdmin()`; los
+  deletes de clientes/leads/proyectos/facturas primero chequean
+  dependencias (proyectos/facturas/eventos asociados) y devuelven un
+  error amigable en vez de dejar que Postgres tire el FK constraint
+  crudo.
 - **Herramientas de archivo/shell en esta máquina**: los tools
-  genéricos `Read`/`Write`/`Edit` del sandbox NO alcanzan
-  `C:\Proyectos\powerfulcrm` (error "outside this session's connected
-  folders"). Todo el trabajo en este repo se hace con las tools de
-  Desktop Commander (`mcp__plugin_desktop-commander_desktop-commander__*`:
-  `read_file`, `write_file`, `edit_block`, `start_process`/
-  `interact_with_process`, etc.). Ese MCP a veces se desconecta y
-  reconecta solo a mitad de sesión — si las tools desaparecen, hay que
-  recargarlas con ToolSearch antes de seguir.
+  genéricos `Read`/`Write`/`Edit` del sandbox SÍ alcanzan
+  `C:\Proyectos\powerfulcrm` en esta sesión (confirmado leyendo y
+  editando archivos del repo, incluido este mismo CLAUDE.md). Si en
+  una sesión futura vuelven a fallar con "outside this session's
+  connected folders", como fallback están las tools de Desktop
+  Commander (`mcp__plugin_desktop-commander_desktop-commander__*`:
+  `read_file`, `write_file`, `edit_block`, etc.) — ese MCP a veces se
+  desconecta y reconecta solo a mitad de sesión, recargar con
+  ToolSearch si desaparece. Para `git commit`/`git push` en este repo,
+  el sandbox SÍ tiene limitaciones reales (`.git/index.lock` y
+  `operations not permitted` al escribir objetos) — esos comandos hay
+  que pedírselos al usuario para que los corra en su propia
+  PowerShell.

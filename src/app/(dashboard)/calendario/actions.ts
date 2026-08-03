@@ -1,6 +1,7 @@
 "use server";
 
 import { getTenantDb } from "@/lib/tenant";
+import { requireTenantAdmin } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -59,6 +60,12 @@ export async function createEvent(formData: FormData) {
 }
 
 export async function deleteEvent(id: string) {
+  // Única acción destructiva que existe hoy en la app — se restringe a
+  // admins/owner del tenant. El resto de las Server Actions (crear
+  // cliente/lead/proyecto/factura/evento) quedan abiertas a cualquier
+  // miembro a propósito, ver src/lib/authz.ts.
+  await requireTenantAdmin();
+
   const { db } = await getTenantDb();
   await db.event.delete({ where: { id } });
   revalidatePath("/calendario");

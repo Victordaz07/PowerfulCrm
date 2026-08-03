@@ -1,4 +1,5 @@
 import { getTenantDb } from "@/lib/tenant";
+import { isTenantAdmin } from "@/lib/authz";
 import { CalendarView } from "@/components/calendario/calendar-view";
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
 
@@ -21,7 +22,7 @@ export default async function CalendarioPage(props: CalendarioPageProps) {
   const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
   const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
-  const [events, clients, projects, leads] = await Promise.all([
+  const [events, clients, projects, leads, canDelete] = await Promise.all([
     db.event.findMany({
       where: { startAt: { gte: gridStart, lte: gridEnd } },
       include: { client: true, project: true, lead: true },
@@ -30,6 +31,7 @@ export default async function CalendarioPage(props: CalendarioPageProps) {
     db.client.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     db.project.findMany({ where: { status: "ACTIVO" }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
     db.lead.findMany({ where: { stage: { not: "PERDIDO" } }, orderBy: { title: "asc" }, select: { id: true, title: true } }),
+    isTenantAdmin(),
   ]);
 
   return (
@@ -56,6 +58,7 @@ export default async function CalendarioPage(props: CalendarioPageProps) {
         clients={clients}
         projects={projects}
         leads={leads}
+        canDeleteEvents={canDelete}
       />
     </div>
   );

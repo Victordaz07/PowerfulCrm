@@ -132,6 +132,17 @@ Validación hecha:
   `claude/multi-tenant-project-setup-vmanmh` es un deploy real. Cambios
   grandes/riesgosos (como este upgrade) van en una rama aparte primero,
   se validan en Preview, y se mergean solo con confirmación explícita.
+- **RBAC**: `src/lib/authz.ts` (`isTenantAdmin()` / `requireTenantAdmin()`)
+  es la fuente de verdad de permisos — se apoya en el rol de
+  Organization de Clerk (`org:admin` / `org:member`), NO en
+  `TenantUser.role`, que existe en el schema pero hoy no se puebla en
+  ningún lado. Cualquier Server Action nueva que borre datos o toque
+  algo sensible (facturación, eliminar clientes/proyectos, gestión del
+  equipo) debe llamar `requireTenantAdmin()` al inicio. Las acciones de
+  creación normal quedan abiertas a cualquier miembro a propósito. Hoy
+  solo `deleteEvent` usa este check — es la única acción destructiva
+  que existe en la app (no hay edit/delete de clientes, leads,
+  proyectos ni facturas todavía).
 - **Herramientas de archivo/shell en esta máquina**: los tools
   genéricos `Read`/`Write`/`Edit` del sandbox NO alcanzan
   `C:\Proyectos\powerfulcrm` (error "outside this session's connected

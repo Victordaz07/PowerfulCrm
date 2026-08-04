@@ -17,7 +17,8 @@ BEGIN
   FOR t IN
     SELECT unnest(ARRAY[
       'tenant_users', 'clients', 'leads', 'projects',
-      'tasks', 'invoices', 'events'
+      'tasks', 'invoices', 'events',
+      'contracts', 'resources', 'automation_rules'
     ])
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY;', t);

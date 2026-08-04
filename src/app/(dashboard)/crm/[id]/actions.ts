@@ -110,7 +110,16 @@ export async function deleteContract(id: string) {
 const createResourceSchema = z.object({
   clientId: z.string().min(1),
   name: z.string().min(1, "El nombre es obligatorio").max(200),
-  url: z.string().url("El enlace debe ser una URL válida").optional().or(z.literal("")),
+  // z.string().url() valida el formato pero no el protocolo — sin este
+  // refine, algo como "javascript:alert(document.cookie)" pasa la
+  // validación y luego se renderiza en un <a href> real en
+  // crm/[id]/page.tsx (XSS almacenado al hacer clic en el recurso).
+  url: z
+    .string()
+    .url("El enlace debe ser una URL válida")
+    .refine((val) => /^https?:\/\//i.test(val), "El enlace debe empezar con http:// o https://")
+    .optional()
+    .or(z.literal("")),
 });
 
 export async function createResource(formData: FormData) {

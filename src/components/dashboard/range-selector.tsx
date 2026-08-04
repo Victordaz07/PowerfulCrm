@@ -11,14 +11,14 @@ interface RangeSelectorProps {
 // Next re-renderiza el Server Component de la página con el nuevo valor.
 export function RangeSelector({ options, selected }: RangeSelectorProps) {
   return (
-    <div className="flex items-center gap-1 rounded-lg bg-ink-950 p-1">
+    <div className="flex items-center gap-1 rounded-lg bg-surface-strong p-1">
       {options.map((opt) => (
         <Link
           key={opt}
           href={`/dashboard?range=${opt}`}
           className={cn(
             "rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-fast",
-            opt === selected ? "bg-primary-500 text-white" : "text-ink-400 hover:text-ink-100"
+            opt === selected ? "bg-primary-500 text-white" : "text-content-muted hover:text-content"
           )}
         >
           {opt}M

@@ -15,7 +15,7 @@ function levelFor(count: number) {
 }
 
 const LEVEL_STYLES = [
-  "bg-ink-800",
+  "bg-surface-strong",
   "bg-primary-500/25",
   "bg-primary-500/45",
   "bg-primary-500/70",
@@ -64,7 +64,7 @@ export function ActivityHeatmap({ days }: ActivityHeatmapProps) {
           </div>
         ))}
       </div>
-      <div className="mt-3 flex items-center gap-1.5 text-[10px] text-ink-500">
+      <div className="mt-3 flex items-center gap-1.5 text-[10px] text-content-dim">
         <span>Menos</span>
         {LEVEL_STYLES.map((cls, i) => (
           <span key={i} className={cn("h-3 w-3 rounded-sm", cls)} />

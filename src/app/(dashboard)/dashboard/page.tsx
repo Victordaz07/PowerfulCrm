@@ -290,8 +290,8 @@ export default async function DashboardPage(props: DashboardPageProps) {
   return (
     <div className="space-y-6 p-8">
       <div>
-        <h1 className="text-xl font-semibold text-ink-50">Resumen</h1>
-        <p className="text-sm text-ink-400">Así va tu negocio hoy.</p>
+        <h1 className="text-xl font-semibold text-content">Resumen</h1>
+        <p className="text-sm text-content-muted">Así va tu negocio hoy.</p>
       </div>
 
       {/* Hero stat strip */}
@@ -319,12 +319,12 @@ export default async function DashboardPage(props: DashboardPageProps) {
       {/* Tendencia de ingresos */}
       <FadeIn
         delay={0.05}
-        className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-6 backdrop-blur-md"
+        className="rounded-2xl border border-edge bg-surface p-6 backdrop-blur-md"
       >
         <div className="mb-2 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-base font-semibold text-ink-50">Tendencia de ingresos</h2>
-            <p className="mt-0.5 text-xs text-ink-400">
+            <h2 className="text-base font-semibold text-content">Tendencia de ingresos</h2>
+            <p className="mt-0.5 text-xs text-content-muted">
               Facturas cobradas por mes
               {hasPreviousPeriodData ? " · línea punteada = mismo período año anterior" : ""}
             </p>
@@ -360,11 +360,11 @@ export default async function DashboardPage(props: DashboardPageProps) {
       {/* Heatmap de actividad */}
       <FadeIn
         delay={0.08}
-        className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-6 backdrop-blur-md"
+        className="rounded-2xl border border-edge bg-surface p-6 backdrop-blur-md"
       >
         <div className="mb-4">
-          <h2 className="text-base font-semibold text-ink-50">Actividad</h2>
-          <p className="mt-0.5 text-xs text-ink-400">
+          <h2 className="text-base font-semibold text-content">Actividad</h2>
+          <p className="mt-0.5 text-xs text-content-muted">
             Leads, facturas y eventos creados por día · últimas 14 semanas
           </p>
         </div>
@@ -375,49 +375,49 @@ export default async function DashboardPage(props: DashboardPageProps) {
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <FadeIn
           delay={0.1}
-          className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-6 backdrop-blur-md lg:col-span-5"
+          className="rounded-2xl border border-edge bg-surface p-6 backdrop-blur-md lg:col-span-5"
         >
-          <h3 className="mb-6 text-sm font-semibold text-ink-50">Próximos compromisos</h3>
+          <h3 className="mb-6 text-sm font-semibold text-content">Próximos compromisos</h3>
           <UpcomingTimeline items={upcomingItems} />
         </FadeIn>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-7">
-          <FadeIn delay={0.15} className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
-            <h4 className="mb-1 text-sm font-medium text-ink-50">Facturas pagadas</h4>
-            <p className="mb-4 text-xs text-ink-400">
+          <FadeIn delay={0.15} className="rounded-2xl border border-edge bg-surface p-5 backdrop-blur-md">
+            <h4 className="mb-1 text-sm font-medium text-content">Facturas pagadas</h4>
+            <p className="mb-4 text-xs text-content-muted">
               {paidInvoicesCount} de {totalInvoicesCount} facturas totales
             </p>
             <div className="flex items-center justify-center">
               <ProgressRing percent={paidRatio} label="Facturas pagadas" tone="primary" />
             </div>
           </FadeIn>
-          <FadeIn delay={0.15} className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
-            <h4 className="mb-1 text-sm font-medium text-ink-50">Proyectos completados</h4>
-            <p className="mb-4 text-xs text-ink-400">
+          <FadeIn delay={0.15} className="rounded-2xl border border-edge bg-surface p-5 backdrop-blur-md">
+            <h4 className="mb-1 text-sm font-medium text-content">Proyectos completados</h4>
+            <p className="mb-4 text-xs text-content-muted">
               {completedProjectsCount} de {totalProjectsCount} proyectos totales
             </p>
             <div className="flex items-center justify-center">
               <ProgressRing percent={completedRatio} label="Proyectos completados" tone="success" />
             </div>
           </FadeIn>
-          <FadeIn delay={0.2} className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
-            <h4 className="mb-1 text-sm font-medium text-ink-50">Facturas pagadas por mes</h4>
-            <p className="mb-2 text-xs text-ink-400">Últimos 6 meses</p>
+          <FadeIn delay={0.2} className="rounded-2xl border border-edge bg-surface p-5 backdrop-blur-md">
+            <h4 className="mb-1 text-sm font-medium text-content">Facturas pagadas por mes</h4>
+            <p className="mb-2 text-xs text-content-muted">Últimos 6 meses</p>
             <MiniSparkline data={paidInvoicesSpark} tone="success" />
           </FadeIn>
-          <FadeIn delay={0.2} className="rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md">
-            <h4 className="mb-1 text-sm font-medium text-ink-50">Leads nuevos</h4>
-            <p className="mb-2 text-xs text-ink-400">Por semana</p>
+          <FadeIn delay={0.2} className="rounded-2xl border border-edge bg-surface p-5 backdrop-blur-md">
+            <h4 className="mb-1 text-sm font-medium text-content">Leads nuevos</h4>
+            <p className="mb-2 text-xs text-content-muted">Por semana</p>
             <MiniSparkline data={newLeadsSpark} tone="primary" />
           </FadeIn>
         </div>
       </section>
 
       {/* Facturas recientes */}
-      <FadeIn delay={0.25} className="rounded-2xl border border-ink-800/60 bg-ink-900/70 backdrop-blur-md">
-        <div className="flex items-center justify-between border-b border-ink-800/60 px-6 py-5">
-          <h3 className="text-sm font-semibold text-ink-50">Facturas recientes</h3>
-          <a href="/facturacion" className="text-xs text-ink-400 hover:text-ink-100">
+      <FadeIn delay={0.25} className="rounded-2xl border border-edge bg-surface backdrop-blur-md">
+        <div className="flex items-center justify-between border-b border-edge px-6 py-5">
+          <h3 className="text-sm font-semibold text-content">Facturas recientes</h3>
+          <a href="/facturacion" className="text-xs text-content-muted hover:text-content">
             Ver todas
           </a>
         </div>

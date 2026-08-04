@@ -23,7 +23,7 @@ export function CopyLinkButton({ token }: { token: string }) {
       type="button"
       onClick={handleClick}
       title="Copiar link de pago para el cliente"
-      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-ink-400 transition-colors hover:bg-white/5 hover:text-ink-100"
+      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-content-muted transition-colors hover:bg-surface hover:text-content"
     >
       {copied ? <Check size={13} className="text-success" /> : <Link2 size={13} />}
       {copied ? "Copiado" : "Link"}

@@ -11,7 +11,7 @@ export default function FacturacionLoading() {
         <Skeleton className="h-9 w-36 rounded-lg" />
       </div>
 
-      <div className="space-y-2 rounded-lg border border-ink-800 p-4">
+      <div className="space-y-2 rounded-lg border border-edge p-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full" />
         ))}

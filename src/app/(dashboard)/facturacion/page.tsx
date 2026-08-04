@@ -12,9 +12,9 @@ const STATUS_STYLES: Record<string, string> = {
   PAGADA: "bg-success/15 text-success",
   PENDIENTE: "bg-warning/15 text-warning",
   VENCIDA: "bg-danger/15 text-danger",
-  BORRADOR: "bg-ink-700 text-ink-300",
-  ENVIADA: "bg-ink-700 text-ink-200",
-  CANCELADA: "bg-ink-800 text-ink-500",
+  BORRADOR: "bg-surface-strong text-content-muted",
+  ENVIADA: "bg-surface-strong text-content",
+  CANCELADA: "bg-surface-strong text-content-dim",
 };
 
 export default async function FacturacionPage() {
@@ -34,16 +34,16 @@ export default async function FacturacionPage() {
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-ink-50">Facturación</h1>
-          <p className="text-sm text-ink-400">Cotizaciones, facturas y estado de pago.</p>
+          <h1 className="text-xl font-semibold text-content">Facturación</h1>
+          <p className="text-sm text-content-muted">Cotizaciones, facturas y estado de pago.</p>
         </div>
         <NewInvoiceDialog clients={clients} projects={projects} />
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-ink-800">
+      <div className="overflow-x-auto rounded-lg border border-edge">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
-            <tr className="border-b border-ink-800 bg-ink-900 text-left text-xs text-ink-400">
+            <tr className="border-b border-edge bg-[var(--panel-bg)] text-left text-xs text-content-muted">
               <th className="px-4 py-3 font-medium">Folio</th>
               <th className="px-4 py-3 font-medium">Cliente</th>
               <th className="px-4 py-3 font-medium">Vence</th>
@@ -56,14 +56,14 @@ export default async function FacturacionPage() {
             {invoices.map((inv) => (
               <tr
                 key={inv.id}
-                className="border-b border-ink-800 last:border-0 hover:bg-ink-900/60 transition-colors duration-fast"
+                className="border-b border-edge last:border-0 hover:bg-surface transition-colors duration-fast"
               >
-                <td className="px-4 py-3 font-mono text-xs text-ink-300">{inv.number}</td>
-                <td className="px-4 py-3 text-ink-100">{inv.client.name}</td>
-                <td className="px-4 py-3 text-ink-400">
+                <td className="px-4 py-3 font-mono text-xs text-content-muted">{inv.number}</td>
+                <td className="px-4 py-3 text-content">{inv.client.name}</td>
+                <td className="px-4 py-3 text-content-muted">
                   {inv.dueDate ? formatDate(inv.dueDate) : "—"}
                 </td>
-                <td className="px-4 py-3 font-medium text-ink-50">
+                <td className="px-4 py-3 font-medium text-content">
                   {formatCurrency(Number(inv.total), inv.currency)}
                 </td>
                 <td className="px-4 py-3">
@@ -109,7 +109,7 @@ export default async function FacturacionPage() {
                       height={140}
                       className="mb-3"
                     />
-                    <p className="text-sm text-ink-500">Aún no has creado ninguna factura.</p>
+                    <p className="text-sm text-content-dim">Aún no has creado ninguna factura.</p>
                   </div>
                 </td>
               </tr>

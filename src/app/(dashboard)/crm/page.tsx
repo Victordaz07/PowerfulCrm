@@ -36,8 +36,8 @@ export default async function CrmPage() {
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-ink-50">Clientes y pipeline</h1>
-          <p className="text-sm text-ink-400">Arrastra una tarjeta para cambiarla de etapa.</p>
+          <h1 className="text-xl font-semibold text-content">Clientes y pipeline</h1>
+          <p className="text-sm text-content-muted">Arrastra una tarjeta para cambiarla de etapa.</p>
         </div>
         <div className="flex gap-2">
           <NewClientDialog />
@@ -46,10 +46,10 @@ export default async function CrmPage() {
       </div>
 
       {/* Lista de clientes */}
-      <div className="mb-8 overflow-x-auto rounded-lg border border-ink-800">
+      <div className="mb-8 overflow-x-auto rounded-lg border border-edge">
         <table className="w-full min-w-[520px] text-sm">
           <thead>
-            <tr className="border-b border-ink-800 bg-ink-900 text-left text-xs text-ink-400">
+            <tr className="border-b border-edge bg-[var(--panel-bg)] text-left text-xs text-content-muted">
               <th className="px-4 py-3 font-medium">Cliente</th>
               <th className="px-4 py-3 font-medium">Contacto</th>
               <th className="px-4 py-3 font-medium">Empresa</th>
@@ -60,11 +60,11 @@ export default async function CrmPage() {
             {clients.map((c) => (
               <tr
                 key={c.id}
-                className="group border-b border-ink-800 last:border-0 hover:bg-ink-900/60 transition-colors duration-fast"
+                className="group border-b border-edge last:border-0 hover:bg-surface transition-colors duration-fast"
               >
-                <td className="px-4 py-3 font-medium text-ink-100">{c.name}</td>
-                <td className="px-4 py-3 text-ink-400">{c.email || c.phone || "—"}</td>
-                <td className="px-4 py-3 text-ink-400">{c.company || "—"}</td>
+                <td className="px-4 py-3 font-medium text-content">{c.name}</td>
+                <td className="px-4 py-3 text-content-muted">{c.email || c.phone || "—"}</td>
+                <td className="px-4 py-3 text-content-muted">{c.company || "—"}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-3 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                     <EditClientDialog client={c} />
@@ -77,7 +77,7 @@ export default async function CrmPage() {
             ))}
             {clients.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-xs text-ink-500">
+                <td colSpan={4} className="px-4 py-8 text-center text-xs text-content-dim">
                   Aún no tienes clientes registrados.
                 </td>
               </tr>
@@ -87,7 +87,7 @@ export default async function CrmPage() {
       </div>
 
       {leads.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-ink-800 py-16 text-center">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-edge py-16 text-center">
           <Image
             src="/illustrations/empty-clients.png"
             alt=""
@@ -95,8 +95,8 @@ export default async function CrmPage() {
             height={160}
             className="mb-4"
           />
-          <p className="text-sm font-medium text-ink-100">Crea tu primer cliente</p>
-          <p className="mt-1 max-w-sm text-xs text-ink-500">
+          <p className="text-sm font-medium text-content">Crea tu primer cliente</p>
+          <p className="mt-1 max-w-sm text-xs text-content-dim">
             Registra un lead para empezar a mover tu pipeline de ventas.
           </p>
         </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { cookies } from "next/headers";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://powerful-crm.vercel.app";
@@ -38,14 +39,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Tema desde la cookie `theme` (la escribe <ThemeToggle> en cliente).
+  // Se aplica como clase en <html> en el server, así no hay flash de
+  // tema incorrecto (FOUC) y no necesitamos un script inline — que el
+  // CSP estricto (proxy.ts) bloquearía de todos modos. Oscuro es default.
+  const theme = (await cookies()).get("theme")?.value === "light" ? "light" : "dark";
+
   return (
     // `dynamic` es obligatorio con contentSecurityPolicy.strict en el
     // middleware (proxy.ts) — el nonce se genera por request, así que
     // esto fuerza render dinámico de este layout (ya lo era en la
     // práctica: todo lo que cuelga de (dashboard) usa auth()/cookies).
     <ClerkProvider dynamic>
-      <html lang="es">
+      <html lang="es" className={theme} suppressHydrationWarning>
         <body>{children}</body>
       </html>
     </ClerkProvider>

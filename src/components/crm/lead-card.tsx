@@ -38,10 +38,10 @@ export function LeadCard({ lead, clientName, clients, index, canDelete }: LeadCa
       whileHover={{ y: -2, scale: 1.01 }}
       transition={{ duration: 0.2, delay: Math.min(index, 6) * 0.03, ease: "easeOut" }}
     >
-      <Card className="group cursor-grab hover:border-ink-600 transition-colors duration-fast active:cursor-grabbing">
+      <Card className="group cursor-grab hover:border-edge transition-colors duration-fast active:cursor-grabbing">
         <CardContent className="p-3">
           <div className="flex items-start justify-between gap-2">
-            <p className="text-sm font-medium text-ink-100">{lead.title}</p>
+            <p className="text-sm font-medium text-content">{lead.title}</p>
             <div className="flex shrink-0 items-center gap-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
               <EditLeadDialog lead={lead} clients={clients} />
               {canDelete && (
@@ -49,7 +49,7 @@ export function LeadCard({ lead, clientName, clients, index, canDelete }: LeadCa
               )}
             </div>
           </div>
-          <p className="text-xs text-ink-400">{clientName}</p>
+          <p className="text-xs text-content-muted">{clientName}</p>
           {lead.value ? (
             <p className="mt-2 text-xs font-medium text-primary-400">{formatCurrency(lead.value)}</p>
           ) : null}

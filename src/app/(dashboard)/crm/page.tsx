@@ -1,6 +1,7 @@
 import { getTenantDb } from "@/lib/tenant";
 import { isTenantAdmin } from "@/lib/authz";
 import Image from "next/image";
+import Link from "next/link";
 import { NewClientDialog } from "@/components/crm/new-client-dialog";
 import { NewLeadDialog } from "@/components/crm/new-lead-dialog";
 import { KanbanBoard } from "@/components/crm/kanban-board";
@@ -62,7 +63,11 @@ export default async function CrmPage() {
                 key={c.id}
                 className="group border-b border-edge last:border-0 hover:bg-surface transition-colors duration-fast"
               >
-                <td className="px-4 py-3 font-medium text-content">{c.name}</td>
+                <td className="px-4 py-3 font-medium text-content">
+                  <Link href={`/crm/${c.id}`} className="hover:text-accent hover:underline">
+                    {c.name}
+                  </Link>
+                </td>
                 <td className="px-4 py-3 text-content-muted">{c.email || c.phone || "—"}</td>
                 <td className="px-4 py-3 text-content-muted">{c.company || "—"}</td>
                 <td className="px-4 py-3">

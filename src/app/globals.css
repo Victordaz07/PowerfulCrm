@@ -7,37 +7,139 @@
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
+/* ──────────────────────────────────────────────────────────────────
+   Sistema de temas "Nimbus" — tokens semánticos en oklch.
+   El tema se aplica con la clase `.dark` / `.light` en <html> (la
+   fija el server desde la cookie `theme`, ver app/layout.tsx). Oscuro
+   es el default. Cada componente nuevo usa estos tokens (bg-surface,
+   text-content, border-edge, etc.) para heredar el tema automáticamente.
+   ────────────────────────────────────────────────────────────────── */
+:root,
+.dark {
+  color-scheme: dark;
+  --page-bg: #0b0e17;
+  --bg-grad: radial-gradient(120% 120% at 15% 0%, oklch(22% 0.04 265) 0%, oklch(14% 0.03 262) 45%, oklch(10% 0.02 260) 100%);
+  --surface: oklch(100% 0 0 / 0.05);
+  --surface-soft: oklch(100% 0 0 / 0.045);
+  --surface-strong: oklch(100% 0 0 / 0.09);
+  --border-glass: oklch(100% 0 0 / 0.1);
+  --sidebar-bg: oklch(20% 0.03 262 / 0.9);
+  --panel-bg: oklch(16% 0.03 262 / 0.85);
+  --content: oklch(97% 0.01 260);
+  --content-muted: oklch(68% 0.02 260);
+  --content-dim: oklch(55% 0.02 260);
+  --blob-1: oklch(55% 0.19 296 / 0.35);
+  --blob-2: oklch(60% 0.14 230 / 0.3);
+  --blob-3: oklch(70% 0.15 150 / 0.14);
+}
+
+.light {
+  color-scheme: light;
+  --page-bg: #f3f4f8;
+  --bg-grad: radial-gradient(120% 120% at 15% 0%, oklch(97% 0.015 265) 0%, oklch(95% 0.012 262) 45%, oklch(93% 0.01 260) 100%);
+  --surface: oklch(100% 0 0 / 0.55);
+  --surface-soft: oklch(100% 0 0 / 0.65);
+  --surface-strong: oklch(100% 0 0 / 0.8);
+  --border-glass: oklch(0% 0 0 / 0.08);
+  --sidebar-bg: oklch(100% 0.01 260 / 0.92);
+  --panel-bg: oklch(98% 0.01 260 / 0.9);
+  --content: oklch(22% 0.02 260);
+  --content-muted: oklch(42% 0.02 260);
+  --content-dim: oklch(55% 0.02 260);
+  --blob-1: oklch(70% 0.13 296 / 0.3);
+  --blob-2: oklch(72% 0.11 230 / 0.26);
+  --blob-3: oklch(78% 0.12 150 / 0.16);
+}
+
+/* Acento de marca (violeta → azul). Igual en ambos temas. */
+:root,
+.dark,
+.light {
+  --accent-a: oklch(68% 0.19 296);
+  --accent-b: oklch(70% 0.14 230);
+  --accent-a-shadow: oklch(60% 0.18 296 / 0.35);
+  --accent-a-bg: oklch(68% 0.19 296 / 0.2);
+  --accent-a-text: oklch(85% 0.1 296);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
 }
 
 * {
-  @apply border-ink-800;
+  border-color: var(--border-glass);
 }
 
 body {
-  @apply bg-ink-950 text-ink-100 antialiased;
+  @apply antialiased;
+  background: var(--page-bg);
+  color: var(--content);
+  font-family: var(--font-sans);
 }
 
 /* foco visible siempre — accesibilidad, no opcional */
 :focus-visible {
-  outline: 2px solid theme("colors.primary.400");
+  outline: 2px solid var(--accent-a);
   outline-offset: 2px;
 }
 
 /* skeleton loader — usado en toda la app en vez de spinners para contenido */
 .skeleton {
-  @apply animate-pulse rounded-md bg-ink-800;
+  @apply animate-pulse rounded-md;
+  background: var(--surface-strong);
 }
 
 /* panel translúcido con blur — usado en cards de dashboard, sidebar, header */
 .glass-panel {
-  @apply border border-ink-800/60 bg-ink-900/70 backdrop-blur-md;
+  border: 1px solid var(--border-glass);
+  background: var(--surface);
+  backdrop-filter: blur(18px);
 }
 
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { @apply bg-ink-700 rounded-full; }
-::-webkit-scrollbar-track { @apply bg-transparent; }
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-strong);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ── Animaciones Nimbus ──────────────────────────────────────────── */
+@keyframes floatBlob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(20px, -30px) scale(1.08);
+  }
+}
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

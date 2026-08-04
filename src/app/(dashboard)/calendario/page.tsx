@@ -37,8 +37,8 @@ export default async function CalendarioPage(props: CalendarioPageProps) {
   return (
     <div className="p-4 sm:p-8">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-ink-50">Calendario</h1>
-        <p className="text-sm text-ink-400">Agenda de reuniones, llamadas y entregas.</p>
+        <h1 className="text-xl font-semibold text-content">Calendario</h1>
+        <p className="text-sm text-content-muted">Agenda de reuniones, llamadas y entregas.</p>
       </div>
 
       <CalendarView

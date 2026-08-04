@@ -28,14 +28,14 @@ export default async function ProyectosPage() {
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-ink-50">Proyectos</h1>
-          <p className="text-sm text-ink-400">{projects.length} proyectos activos</p>
+          <h1 className="text-xl font-semibold text-content">Proyectos</h1>
+          <p className="text-sm text-content-muted">{projects.length} proyectos activos</p>
         </div>
         <NewProjectDialog clients={clients} />
       </div>
 
       {projects.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-ink-800 py-16 text-center">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-edge py-16 text-center">
           <Image
             src="/illustrations/empty-projects.png"
             alt=""
@@ -43,8 +43,8 @@ export default async function ProyectosPage() {
             height={160}
             className="mb-4"
           />
-          <p className="text-sm text-ink-300">Aún no tienes proyectos activos.</p>
-          <p className="mt-1 text-xs text-ink-500">
+          <p className="text-sm text-content-muted">Aún no tienes proyectos activos.</p>
+          <p className="mt-1 text-xs text-content-dim">
             Crea uno desde la ficha de un cliente para empezar a asignar tareas.
           </p>
         </div>
@@ -57,8 +57,8 @@ export default async function ProyectosPage() {
               <Card key={p.id} className="group">
                 <CardHeader className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-medium text-ink-50">{p.name}</p>
-                    <p className="text-xs text-ink-400">{p.client.name}</p>
+                    <p className="text-sm font-medium text-content">{p.name}</p>
+                    <p className="text-xs text-content-muted">{p.client.name}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                     <EditProjectDialog
@@ -79,13 +79,13 @@ export default async function ProyectosPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="mb-2 h-1.5 w-full rounded-full bg-ink-800">
+                  <div className="mb-2 h-1.5 w-full rounded-full bg-surface-strong">
                     <div
                       className="h-1.5 rounded-full bg-primary-500 transition-all duration-fast"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <div className="flex items-center justify-between text-xs text-ink-400">
+                  <div className="flex items-center justify-between text-xs text-content-muted">
                     <span>{done}/{p.tasks.length} tareas</span>
                     {p.dueDate && <span>Entrega {formatDate(p.dueDate)}</span>}
                   </div>

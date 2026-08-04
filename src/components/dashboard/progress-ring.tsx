@@ -37,7 +37,7 @@ export function ProgressRing({
           r={radius}
           fill="none"
           strokeWidth={strokeWidth}
-          className="stroke-ink-800"
+          className="stroke-edge"
         />
         <circle
           cx={center}
@@ -52,7 +52,7 @@ export function ProgressRing({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-lg font-semibold text-ink-50">{clamped}%</span>
+        <span className="text-lg font-semibold text-content">{clamped}%</span>
       </div>
       <span className="sr-only">{label}</span>
     </div>

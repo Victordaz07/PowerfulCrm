@@ -105,8 +105,8 @@ function KanbanColumn({
   return (
     <div className="w-72 flex-shrink-0">
       <div className="mb-2 flex items-center justify-between px-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-ink-400">{label}</span>
-        <span className="text-xs text-ink-500">{leads.length}</span>
+        <span className="text-xs font-medium uppercase tracking-wide text-content-muted">{label}</span>
+        <span className="text-xs text-content-dim">{leads.length}</span>
       </div>
       <div
         ref={setNodeRef}
@@ -119,7 +119,7 @@ function KanbanColumn({
           <DraggableLead key={lead.id} lead={lead} index={index} clients={clients} canDelete={canDelete} />
         ))}
         {leads.length === 0 && (
-          <div className="rounded-md border border-dashed border-ink-800 p-4 text-center text-xs text-ink-500">
+          <div className="rounded-md border border-dashed border-edge p-4 text-center text-xs text-content-dim">
             Sin leads aquí
           </div>
         )}

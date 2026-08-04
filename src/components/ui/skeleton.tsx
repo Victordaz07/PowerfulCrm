@@ -4,5 +4,5 @@ import { cn } from "@/lib/utils";
 // de cada ruta del dashboard (Next.js los muestra automáticamente
 // como fallback de Suspense mientras el Server Component carga datos).
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-md bg-ink-800/60", className)} />;
+  return <div className={cn("animate-pulse rounded-md bg-surface", className)} />;
 }

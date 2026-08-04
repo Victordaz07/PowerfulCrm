@@ -14,9 +14,9 @@ const STATUS_STYLES: Record<string, string> = {
   PAGADA: "bg-success/15 text-success",
   PENDIENTE: "bg-warning/15 text-warning",
   VENCIDA: "bg-danger/15 text-danger",
-  BORRADOR: "bg-ink-700 text-ink-300",
-  ENVIADA: "bg-ink-700 text-ink-200",
-  CANCELADA: "bg-ink-800 text-ink-500",
+  BORRADOR: "bg-surface-strong text-content-muted",
+  ENVIADA: "bg-surface-strong text-content",
+  CANCELADA: "bg-surface-strong text-content-dim",
 };
 
 const BADGE_COLORS = ["bg-primary-500/20 text-primary-400", "bg-success/20 text-success", "bg-danger/20 text-danger"];
@@ -28,14 +28,14 @@ function badgeColor(name: string) {
 
 export function RecentInvoicesTable({ rows }: { rows: RecentInvoiceRow[] }) {
   if (rows.length === 0) {
-    return <p className="px-6 py-10 text-center text-sm text-ink-500">Aún no has creado ninguna factura.</p>;
+    return <p className="px-6 py-10 text-center text-sm text-content-dim">Aún no has creado ninguna factura.</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[560px] text-sm">
         <thead>
-          <tr className="border-b border-ink-800/60 text-left text-xs text-ink-400">
+          <tr className="border-b border-edge text-left text-xs text-content-muted">
             <th className="px-6 py-3 font-medium">Cliente</th>
             <th className="px-6 py-3 font-medium">Número</th>
             <th className="px-6 py-3 font-medium">Fecha</th>
@@ -56,19 +56,19 @@ export function RecentInvoicesTable({ rows }: { rows: RecentInvoiceRow[] }) {
                   >
                     {row.clientName.charAt(0).toUpperCase()}
                   </div>
-                  <span className="font-medium text-ink-100">{row.clientName}</span>
+                  <span className="font-medium text-content">{row.clientName}</span>
                 </div>
               </td>
-              <td className="px-6 py-3.5 font-mono text-xs text-ink-400">{row.number}</td>
-              <td className="px-6 py-3.5 text-ink-400">{formatDate(row.date)}</td>
-              <td className="px-6 py-3.5 num font-medium text-ink-50">
+              <td className="px-6 py-3.5 font-mono text-xs text-content-muted">{row.number}</td>
+              <td className="px-6 py-3.5 text-content-muted">{formatDate(row.date)}</td>
+              <td className="px-6 py-3.5 num font-medium text-content">
                 {formatCurrency(row.total, row.currency)}
               </td>
               <td className="px-6 py-3.5">
                 <span
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
-                    STATUS_STYLES[row.status] ?? "bg-ink-800 text-ink-300"
+                    STATUS_STYLES[row.status] ?? "bg-surface-strong text-content-muted"
                   )}
                 >
                   <span className="h-1.5 w-1.5 rounded-full bg-current" />

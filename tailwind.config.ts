@@ -30,6 +30,23 @@ export default {
         success: "#10B981",
         danger: "#EF4444",
         warning: "#F59E0B",
+        // Tokens semánticos "Nimbus" — resuelven a oklch vía CSS vars y
+        // cambian con el tema (.dark / .light). Ver globals.css.
+        edge: "var(--border-glass)",
+        surface: {
+          DEFAULT: "var(--surface)",
+          soft: "var(--surface-soft)",
+          strong: "var(--surface-strong)",
+        },
+        content: {
+          DEFAULT: "var(--content)",
+          muted: "var(--content-muted)",
+          dim: "var(--content-dim)",
+        },
+        accent: {
+          DEFAULT: "var(--accent-a)",
+          2: "var(--accent-b)",
+        },
       },
       fontFamily: {
         sans: ["var(--font-sans)", "sans-serif"],

@@ -26,13 +26,13 @@ const ICON_TONE_STYLES: Record<NonNullable<StatCardProps["iconTone"]>, string> =
   primary: "bg-primary-500/15 text-primary-400",
   warning: "bg-warning/15 text-warning",
   danger: "bg-danger/15 text-danger",
-  neutral: "bg-ink-700 text-ink-300",
+  neutral: "bg-surface-strong text-content-muted",
 };
 
 const TREND_TONE_STYLES: Record<NonNullable<NonNullable<StatCardProps["trend"]>["tone"]>, string> = {
   success: "text-success",
   danger: "text-danger",
-  neutral: "text-ink-400",
+  neutral: "text-content-muted",
 };
 
 export function StatCard({
@@ -52,7 +52,7 @@ export function StatCard({
       whileHover={{ y: -2 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
       className={cn(
-        "rounded-2xl border border-ink-800/60 bg-ink-900/70 p-5 backdrop-blur-md",
+        "rounded-2xl border border-edge bg-surface p-5 backdrop-blur-md",
         className
       )}
     >
@@ -62,16 +62,16 @@ export function StatCard({
             {icon}
           </div>
           <div className="min-w-0">
-            <p className="mb-0.5 text-xs text-ink-400">{label}</p>
-            <p className={cn("text-2xl font-semibold num", valueTone === "danger" ? "text-danger" : "text-ink-50")}>
+            <p className="mb-0.5 text-xs text-content-muted">{label}</p>
+            <p className={cn("text-2xl font-semibold num", valueTone === "danger" ? "text-danger" : "text-content")}>
               {value}
             </p>
           </div>
         </div>
       ) : (
         <>
-          <p className="mb-2 text-xs text-ink-400">{label}</p>
-          <p className={cn("text-lg font-semibold num", valueTone === "danger" ? "text-danger" : "text-ink-50")}>
+          <p className="mb-2 text-xs text-content-muted">{label}</p>
+          <p className={cn("text-lg font-semibold num", valueTone === "danger" ? "text-danger" : "text-content")}>
             {value}
           </p>
         </>
@@ -87,7 +87,7 @@ export function StatCard({
           {trend.value}
         </span>
       )}
-      {hint && !trend && <span className="mt-2 inline-block text-[11px] text-ink-500">{hint}</span>}
+      {hint && !trend && <span className="mt-2 inline-block text-[11px] text-content-dim">{hint}</span>}
     </motion.div>
   );
 }

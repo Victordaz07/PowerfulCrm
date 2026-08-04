@@ -53,7 +53,7 @@ export function ConfirmDeleteButton({
         <button
           type="button"
           onClick={(e) => e.stopPropagation()}
-          className={cn("text-ink-500 transition-colors hover:text-danger", className)}
+          className={cn("text-content-dim transition-colors hover:text-danger", className)}
           aria-label={`Eliminar ${itemLabel}`}
         >
           <Trash2 size={iconSize} />
@@ -63,12 +63,12 @@ export function ConfirmDeleteButton({
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
         <Dialog.Content
           onClick={(e) => e.stopPropagation()}
-          className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-ink-800 bg-ink-900 p-6 shadow-xl"
+          className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-edge bg-[var(--panel-bg)] p-6 shadow-xl"
         >
-          <Dialog.Title className="text-base font-semibold text-ink-50">
+          <Dialog.Title className="text-base font-semibold text-content">
             ¿Eliminar {itemLabel}?
           </Dialog.Title>
-          <Dialog.Description className="mt-1 text-sm text-ink-400">
+          <Dialog.Description className="mt-1 text-sm text-content-muted">
             Esta acción no se puede deshacer.
           </Dialog.Description>
 
@@ -77,7 +77,7 @@ export function ConfirmDeleteButton({
           <div className="mt-5 flex justify-end gap-2">
             <Dialog.Close
               onClick={(e) => e.stopPropagation()}
-              className="rounded-lg px-3 py-2 text-sm text-ink-400 hover:text-ink-100"
+              className="rounded-lg px-3 py-2 text-sm text-content-muted hover:text-content"
             >
               Cancelar
             </Dialog.Close>

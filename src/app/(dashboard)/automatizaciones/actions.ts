@@ -5,7 +5,7 @@ import { requireTenantAdmin } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-export const AUTOMATION_RULE_TYPES = ["FACTURAS_POR_VENCER", "LEADS_SIN_SEGUIMIENTO"] as const;
+const AUTOMATION_RULE_TYPES = ["FACTURAS_POR_VENCER", "LEADS_SIN_SEGUIMIENTO"] as const;
 
 const createAutomationSchema = z.object({
   title: z.string().min(1, "La descripción es obligatoria").max(200),

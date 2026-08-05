@@ -6,6 +6,11 @@ import { AutomationToggle } from "@/components/automatizaciones/automation-toggl
 import { ConfirmDeleteButton } from "@/components/ui/confirm-delete-button";
 import { deleteAutomation } from "./actions";
 
+const RULE_TYPE_LABEL: Record<string, string> = {
+  FACTURAS_POR_VENCER: "Facturas por vencer",
+  LEADS_SIN_SEGUIMIENTO: "Leads sin seguimiento",
+};
+
 export default async function AutomatizacionesPage() {
   const { db } = await getTenantDb();
   const [rules, canDelete] = await Promise.all([
@@ -42,6 +47,10 @@ export default async function AutomatizacionesPage() {
           >
             <div className="min-w-0 flex-1">
               <div className="text-sm font-bold text-content">{rule.title}</div>
+              <div className="mt-0.5 text-[12.5px] text-content-muted">
+                {RULE_TYPE_LABEL[rule.type] ?? rule.type} · {rule.daysThreshold} día{rule.daysThreshold === 1 ? "" : "s"}
+                {rule.lastRunAt && ` · última corrida ${rule.lastRunAt.toLocaleDateString("es-MX")}`}
+              </div>
               {rule.description && (
                 <div className="mt-0.5 text-[12.5px] text-content-muted">{rule.description}</div>
               )}
@@ -65,16 +74,15 @@ export default async function AutomatizacionesPage() {
             </div>
             <p className="text-sm font-medium text-content">Aún no tienes automatizaciones</p>
             <p className="mt-1 max-w-sm text-xs text-content-dim">
-              Crea reglas para que tu negocio trabaje solo. La ejecución automática llega en una fase posterior;
-              por ahora puedes definirlas y activarlas.
+              Crea reglas para que tu negocio trabaje solo — se revisan todos los días y avisan por email.
             </p>
           </div>
         )}
       </div>
 
       <p className="text-[11px] text-content-dim">
-        Nota: las reglas se guardan y administran aquí. La ejecución automática (envíos, recordatorios) se
-        conectará vía Inngest en una fase posterior.
+        Las reglas activas se revisan todos los días a las 9am y avisan por email a tu equipo cuando encuentran
+        algo (facturas por vencer, leads sin seguimiento).
       </p>
     </div>
   );

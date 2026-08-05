@@ -48,10 +48,20 @@ export function NewResourceDialog({ clientId }: { clientId: string }) {
               <input name="name" required maxLength={200} className={inputClass} placeholder="Brief de marca.pdf" />
             </div>
             <div>
-              <label className={labelClass}>Enlace (opcional)</label>
+              <label className={labelClass}>Archivo (opcional)</label>
+              <input
+                name="file"
+                type="file"
+                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.zip,.csv,.xlsx"
+                className={`${inputClass} file:mr-3 file:rounded-md file:border-0 file:bg-primary-500/15 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-500`}
+              />
+              <p className="mt-1 text-[11px] text-content-dim">Máximo 10 MB.</p>
+            </div>
+            <div>
+              <label className={labelClass}>… o enlace externo (opcional)</label>
               <input name="url" type="url" className={inputClass} placeholder="https://drive.google.com/…" />
               <p className="mt-1 text-[11px] text-content-dim">
-                Pega un enlace a Drive, Dropbox, Figma, etc. La subida de archivos llega en una fase posterior.
+                Pega un enlace a Drive, Dropbox, Figma, etc. si prefieres no subir el archivo.
               </p>
             </div>
 

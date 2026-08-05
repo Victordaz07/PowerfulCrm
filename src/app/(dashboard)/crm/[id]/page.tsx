@@ -13,6 +13,23 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+// Defensa en profundidad: createResource ya valida el protocolo, pero
+// esto cubre filas creadas antes de ese fix — sin esto, un valor como
+// "javascript:alert(document.cookie)" se renderiza en un <a href> real.
+function isSafeResourceUrl(url: string) {
+  try {
+    return ["http:", "https:"].includes(new URL(url).protocol);
+  } catch {
+    return false;
+  }
+}
+
+function formatFileSize(bytes: number | null) {
+  if (!bytes) return null;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 type Badge = { background: string; color: string };
 const CONTRACT_BADGE: Record<string, Badge> = {
   ACTIVO: { background: "oklch(65% 0.15 150 / 0.18)", color: "oklch(60% 0.15 150)" },
@@ -169,12 +186,15 @@ export default async function ClientDetailPage({ params }: PageProps) {
               <div key={r.id} className="group flex items-center gap-3 border-b border-edge py-3 last:border-0">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-content-dim" />
                 <div className="min-w-0 flex-1 text-sm text-content">
-                  {r.url ? (
+                  {r.url && isSafeResourceUrl(r.url) ? (
                     <a href={r.url} target="_blank" rel="noopener noreferrer" className="hover:text-accent hover:underline">
                       {r.name}
                     </a>
                   ) : (
                     r.name
+                  )}
+                  {formatFileSize(r.sizeBytes) && (
+                    <span className="ml-2 text-xs text-content-dim">{formatFileSize(r.sizeBytes)}</span>
                   )}
                 </div>
                 {canDelete && (

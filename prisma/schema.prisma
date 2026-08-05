@@ -292,8 +292,9 @@ enum ContractStatus {
 }
 
 // ── Recursos/archivos por cliente ────────────────────────────────
-// Por ahora solo metadata + link externo (Drive, Dropbox, etc.); no
-// hay storage binario propio todavía (requiere elegir Vercel Blob/S3).
+// Link externo (Drive, Dropbox, etc.) o archivo subido a Vercel Blob —
+// en ambos casos `url` es la URL pública; mimeType/sizeBytes solo se
+// llenan cuando es un archivo subido, para distinguir uno de otro en la UI.
 model Resource {
   id        String   @id @default(cuid())
   tenantId  String
@@ -302,6 +303,8 @@ model Resource {
   client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   name      String
   url       String?
+  mimeType  String?
+  sizeBytes Int?
   createdAt DateTime @default(now())
 
   @@index([tenantId, clientId])
@@ -309,18 +312,29 @@ model Resource {
 }
 
 // ── Reglas de automatización ─────────────────────────────────────
-// Gestionables y persistentes. La EJECUCIÓN real (vía Inngest) es un
-// paso posterior; hoy esto administra las reglas, no las dispara.
+// Catálogo fijo de tipos de regla (no un builder de condiciones libre)
+// para mantener la ejecución simple: cada `type` sabe qué consultar y
+// qué avisar. `lastRunAt` evita reenviar el mismo aviso si el cron de
+// Inngest corre más de una vez sobre la misma ventana (mismo rol que
+// Event.reminderSentAt).
 model AutomationRule {
-  id          String   @id @default(cuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  title       String
-  description String?
-  enabled     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String             @id @default(cuid())
+  tenantId       String
+  tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  type           AutomationRuleType @default(FACTURAS_POR_VENCER)
+  daysThreshold  Int                @default(3)
+  enabled        Boolean            @default(true)
+  lastRunAt      DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   @@index([tenantId])
   @@map("automation_rules")
+}
+
+enum AutomationRuleType {
+  FACTURAS_POR_VENCER
+  LEADS_SIN_SEGUIMIENTO
 }

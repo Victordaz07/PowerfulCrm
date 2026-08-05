@@ -5,9 +5,17 @@ import { requireTenantAdmin } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+export const AUTOMATION_RULE_TYPES = ["FACTURAS_POR_VENCER", "LEADS_SIN_SEGUIMIENTO"] as const;
+
 const createAutomationSchema = z.object({
   title: z.string().min(1, "La descripción es obligatoria").max(200),
   description: z.string().max(500).optional(),
+  type: z.enum(AUTOMATION_RULE_TYPES),
+  daysThreshold: z.coerce
+    .number({ invalid_type_error: "Debe ser un número" })
+    .int()
+    .min(1, "Debe ser al menos 1 día")
+    .max(365, "Máximo 365 días"),
 });
 
 export async function createAutomation(formData: FormData) {
@@ -23,6 +31,8 @@ export async function createAutomation(formData: FormData) {
       tenantId,
       title: data.title,
       description: data.description || null,
+      type: data.type,
+      daysThreshold: data.daysThreshold,
       enabled: true,
     },
   });

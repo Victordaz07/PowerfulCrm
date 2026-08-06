@@ -1,27 +1,63 @@
 "use client";
 
-import { Sparkles, X } from "lucide-react";
+import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
+import { Sparkles, X, Loader2, Settings } from "lucide-react";
+import { getAssistantState, askAssistant, type AssistantSuggestion } from "@/app/(dashboard)/assistant-actions";
 
 interface AiAssistantPanelProps {
   open: boolean;
   onClose: () => void;
 }
 
-// Sugerencias de ejemplo. En la Fase 4 esto se alimenta de datos reales
-// del tenant + un modelo (leads sin seguimiento, facturas por vencer, etc.).
-const SUGGESTIONS = [
-  { text: "3 leads llevan más de 5 días sin seguimiento.", action: "Contactar" },
-  { text: "Sugerido: subir tu tarifa por hora un 8% este trimestre.", action: "Revisar" },
-  { text: "Tienes facturas próximas a vencer esta semana.", action: "Enviar recordatorio" },
-];
+interface ChatEntry {
+  role: "user" | "assistant";
+  text: string;
+}
 
 /**
- * Panel lateral del Asistente IA. Stub visual: la UI es real y navegable
- * pero las acciones aún no ejecutan nada (Fase 4). Se abre desde el botón
- * "Asistente IA" del header.
+ * Panel lateral del Asistente IA. BYOK: usa la API key que el tenant
+ * configuró en /configuracion (Fase 4) — sugerencias reales (facturas
+ * por vencer, leads sin seguimiento) y un chat que llama de verdad al
+ * proveedor elegido. Si no hay key configurada, muestra un CTA en vez
+ * de fallar.
  */
 export function AiAssistantPanel({ open, onClose }: AiAssistantPanelProps) {
+  const [configured, setConfigured] = useState(false);
+  const [suggestions, setSuggestions] = useState<AssistantSuggestion[]>([]);
+  const [chat, setChat] = useState<ChatEntry[]>([]);
+  const [question, setQuestion] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, startLoading] = useTransition();
+  const [isAsking, startAsking] = useTransition();
+
+  useEffect(() => {
+    if (!open) return;
+    startLoading(async () => {
+      const state = await getAssistantState();
+      setConfigured(state.configured);
+      setSuggestions(state.suggestions);
+    });
+  }, [open]);
+
   if (!open) return null;
+
+  function handleAsk(e: React.FormEvent) {
+    e.preventDefault();
+    const q = question.trim();
+    if (!q || isAsking) return;
+    setError(null);
+    setChat((prev) => [...prev, { role: "user", text: q }]);
+    setQuestion("");
+    startAsking(async () => {
+      const result = await askAssistant(q);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setChat((prev) => [...prev, { role: "assistant", text: result.answer ?? "" }]);
+    });
+  }
 
   return (
     <>
@@ -51,30 +87,69 @@ export function AiAssistantPanel({ open, onClose }: AiAssistantPanelProps) {
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
-          {SUGGESTIONS.map((s, i) => (
-            <div
-              key={i}
-              className="flex flex-col gap-2 rounded-2xl border border-edge bg-surface-strong p-4"
+        {loading ? (
+          <div className="flex flex-1 items-center justify-center text-content-dim">
+            <Loader2 size={20} className="animate-spin" />
+          </div>
+        ) : !configured ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+            <Settings size={28} className="text-content-dim" />
+            <p className="text-sm text-content-muted">
+              Conecta tu API key de Claude, GPT o Gemini para activar el Asistente.
+            </p>
+            <Link
+              href="/configuracion"
+              onClick={onClose}
+              className="rounded-lg px-4 py-2 text-xs font-bold text-white"
+              style={{ background: "linear-gradient(135deg, var(--accent-a), var(--accent-b))" }}
             >
-              <p className="text-[13px] leading-snug text-content">{s.text}</p>
-              <button
-                type="button"
-                className="self-start rounded-lg px-3 py-1.5 text-xs font-bold text-white"
-                style={{ background: "linear-gradient(135deg, var(--accent-a), var(--accent-b))" }}
-              >
-                {s.action}
-              </button>
-            </div>
-          ))}
-        </div>
+              Ir a Configuración
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
+              {suggestions.map((s) => (
+                <div key={s.id} className="flex flex-col gap-2 rounded-2xl border border-edge bg-surface-strong p-4">
+                  <p className="text-[13px] leading-snug text-content">{s.text}</p>
+                </div>
+              ))}
 
-        <div className="flex items-center gap-2 rounded-xl border border-edge bg-surface-strong px-3 py-2.5">
-          <input
-            placeholder="Pregúntale algo..."
-            className="flex-1 bg-transparent text-[13px] text-content outline-none placeholder:text-content-dim"
-          />
-        </div>
+              {chat.length > 0 && (
+                <div className="flex flex-col gap-2 border-t border-edge pt-3">
+                  {chat.map((entry, i) => (
+                    <div
+                      key={i}
+                      className={`rounded-xl px-3 py-2 text-[13px] leading-snug ${
+                        entry.role === "user"
+                          ? "self-end bg-primary-500/15 text-content"
+                          : "self-start bg-surface-strong text-content"
+                      }`}
+                    >
+                      {entry.text}
+                    </div>
+                  ))}
+                  {isAsking && (
+                    <div className="self-start rounded-xl bg-surface-strong px-3 py-2 text-content-dim">
+                      <Loader2 size={14} className="animate-spin" />
+                    </div>
+                  )}
+                </div>
+              )}
+              {error && <p className="text-xs text-danger">{error}</p>}
+            </div>
+
+            <form onSubmit={handleAsk} className="flex items-center gap-2 rounded-xl border border-edge bg-surface-strong px-3 py-2.5">
+              <input
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder="Pregúntale algo..."
+                disabled={isAsking}
+                className="flex-1 bg-transparent text-[13px] text-content outline-none placeholder:text-content-dim disabled:opacity-60"
+              />
+            </form>
+          </>
+        )}
       </aside>
     </>
   );

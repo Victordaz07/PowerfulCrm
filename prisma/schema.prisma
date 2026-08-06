@@ -23,6 +23,13 @@ model Tenant {
   currency  String   @default("MXN")
   createdAt DateTime @default(now())
 
+  // Asistente IA (BYOK): el tenant paga su propio uso pegando su API key
+  // del proveedor que elija. aiApiKeyEncrypted nunca se guarda en claro —
+  // ver src/lib/crypto.ts. Sin @relation porque no tiene tabla propia,
+  // vive directo en Tenant (1 tenant = como mucho 1 key configurada hoy).
+  aiProvider        AiProvider?
+  aiApiKeyEncrypted String?
+
   users           TenantUser[]
   clients         Client[]
   leads           Lead[]
@@ -35,6 +42,12 @@ model Tenant {
   automationRules AutomationRule[]
 
   @@map("tenants")
+}
+
+enum AiProvider {
+  ANTHROPIC
+  OPENAI
+  GOOGLE
 }
 
 // ── Usuarios del tenant (mapeados a Clerk por clerkUserId) ─────

@@ -11,6 +11,7 @@ import {
   Receipt,
   CalendarDays,
   Zap,
+  Settings,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/facturacion", label: "Facturación", icon: Receipt, shortcut: "G F" },
   { href: "/calendario", label: "Calendario", icon: CalendarDays, shortcut: "G A" },
   { href: "/automatizaciones", label: "Automatizaciones", icon: Zap, shortcut: "G U", badge: "3" },
+  { href: "/configuracion", label: "Configuración", icon: Settings, shortcut: "G S" },
 ];
 
 // Cuentas conectadas — stub visual (Fase 4 lo conecta a OAuth real).

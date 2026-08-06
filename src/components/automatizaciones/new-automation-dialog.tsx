@@ -10,10 +10,17 @@ const inputClass =
   "w-full rounded-lg border border-edge bg-surface-strong px-3 py-2 text-sm text-content focus:border-primary-500 focus:outline-none";
 const labelClass = "mb-1 block text-xs text-content-muted";
 
+const RULE_TYPE_OPTIONS = [
+  { value: "FACTURAS_POR_VENCER", label: "Facturas por vencer", daysLabel: "Avisar con cuántos días de anticipación" },
+  { value: "LEADS_SIN_SEGUIMIENTO", label: "Leads sin seguimiento", daysLabel: "Avisar tras cuántos días sin novedades" },
+] as const;
+
 export function NewAutomationDialog() {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [type, setType] = useState<(typeof RULE_TYPE_OPTIONS)[number]["value"]>("FACTURAS_POR_VENCER");
+  const daysLabel = RULE_TYPE_OPTIONS.find((o) => o.value === type)?.daysLabel ?? "Días de anticipación";
 
   function handleSubmit(formData: FormData) {
     setError(null);
@@ -49,7 +56,34 @@ export function NewAutomationDialog() {
                 required
                 maxLength={200}
                 className={inputClass}
-                placeholder="Enviar recordatorio a leads fríos"
+                placeholder="Avisar facturas por vencer"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Tipo de regla</label>
+              <select
+                name="type"
+                value={type}
+                onChange={(e) => setType(e.target.value as typeof type)}
+                className={inputClass}
+              >
+                {RULE_TYPE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>{daysLabel}</label>
+              <input
+                name="daysThreshold"
+                type="number"
+                min={1}
+                max={365}
+                required
+                defaultValue={3}
+                className={inputClass}
               />
             </div>
             <div>

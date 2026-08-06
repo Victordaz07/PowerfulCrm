@@ -1,6 +1,7 @@
 import { inngest } from "./client";
 import { rawPrisma } from "@/lib/prisma";
 import { Resend } from "resend";
+import { isSameDay } from "date-fns";
 
 // Instanciado bajo demanda: crearlo a nivel de módulo rompe el build de
 // Next.js (y cualquier ruta que importe este archivo) cuando falta
@@ -142,5 +143,87 @@ export const remindUpcomingEvents = inngest.createFunction(
     }
 
     return { reminded: upcoming.length };
+  }
+);
+
+/**
+ * Corre todos los días a las 9am: evalúa cada AutomationRule activa (de
+ * TODOS los tenants) contra su catálogo fijo de tipos y avisa por email
+ * si encuentra algo. `lastRunAt` marca el día en que ya se evaluó una
+ * regla — evita reenviar el mismo aviso si el cron corre más de una vez
+ * el mismo día, pero SÍ vuelve a avisar al día siguiente mientras la
+ * condición siga vigente (a diferencia de reminderSentAt en Event, que
+ * es de una sola vez).
+ */
+export const runAutomationRules = inngest.createFunction(
+  { id: "run-automation-rules" },
+  { cron: "0 9 * * *" },
+  async ({ step }) => {
+    const rules = await step.run("find-enabled-rules", () =>
+      rawPrisma.automationRule.findMany({
+        where: { enabled: true },
+        include: { tenant: { include: { users: true } } },
+      })
+    );
+
+    const now = new Date();
+    let evaluated = 0;
+
+    for (const rule of rules) {
+      if (rule.lastRunAt && isSameDay(new Date(rule.lastRunAt), now)) continue;
+
+      const recipients = rule.tenant.users.map((u) => u.email).filter((email): email is string => Boolean(email));
+      if (recipients.length === 0) continue;
+
+      await step.run(`evaluate-${rule.id}`, async () => {
+        if (rule.type === "FACTURAS_POR_VENCER") {
+          const threshold = new Date(now.getTime() + rule.daysThreshold * 24 * 60 * 60 * 1000);
+          const invoices = await rawPrisma.invoice.findMany({
+            where: {
+              tenantId: rule.tenantId,
+              status: { in: ["PENDIENTE", "ENVIADA", "VENCIDA"] },
+              dueDate: { not: null, lte: threshold },
+            },
+            include: { client: true },
+            orderBy: { dueDate: "asc" },
+          });
+          if (invoices.length > 0) {
+            await getResend().emails.send({
+              from: "automatizaciones@tu-dominio.com",
+              to: recipients,
+              subject: `${invoices.length} factura${invoices.length === 1 ? "" : "s"} por vencer`,
+              text: invoices
+                .map((inv) => `${inv.number} — ${inv.client.name} — vence ${new Date(inv.dueDate!).toLocaleDateString("es-MX")}`)
+                .join("\n"),
+            });
+          }
+        } else if (rule.type === "LEADS_SIN_SEGUIMIENTO") {
+          const staleSince = new Date(now.getTime() - rule.daysThreshold * 24 * 60 * 60 * 1000);
+          const leads = await rawPrisma.lead.findMany({
+            where: {
+              tenantId: rule.tenantId,
+              stage: { notIn: ["GANADO", "PERDIDO"] },
+              updatedAt: { lte: staleSince },
+            },
+            orderBy: { updatedAt: "asc" },
+          });
+          if (leads.length > 0) {
+            await getResend().emails.send({
+              from: "automatizaciones@tu-dominio.com",
+              to: recipients,
+              subject: `${leads.length} lead${leads.length === 1 ? "" : "s"} sin seguimiento`,
+              text: leads
+                .map((l) => `${l.title} — sin novedades desde ${new Date(l.updatedAt).toLocaleDateString("es-MX")}`)
+                .join("\n"),
+            });
+          }
+        }
+
+        await rawPrisma.automationRule.update({ where: { id: rule.id }, data: { lastRunAt: new Date() } });
+      });
+      evaluated++;
+    }
+
+    return { evaluated };
   }
 );

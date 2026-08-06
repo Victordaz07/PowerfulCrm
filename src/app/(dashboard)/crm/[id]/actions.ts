@@ -4,6 +4,9 @@ import { getTenantDb } from "@/lib/tenant";
 import { requireTenantAdmin } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { put } from "@vercel/blob";
+
+const MAX_RESOURCE_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 function revalidateClientDetail(clientId: string) {
   revalidatePath(`/crm/${clientId}`);
@@ -110,10 +113,9 @@ export async function deleteContract(id: string) {
 const createResourceSchema = z.object({
   clientId: z.string().min(1),
   name: z.string().min(1, "El nombre es obligatorio").max(200),
-  // z.string().url() valida el formato pero no el protocolo — sin este
-  // refine, algo como "javascript:alert(document.cookie)" pasa la
-  // validación y luego se renderiza en un <a href> real en
-  // crm/[id]/page.tsx (XSS almacenado al hacer clic en el recurso).
+  // z.string().url() valida el formato pero no el protocolo — sin el
+  // refine, algo como "javascript:alert(1)" pasaría y luego se
+  // renderiza en un <a href> real en crm/[id]/page.tsx (XSS almacenado).
   url: z
     .string()
     .url("El enlace debe ser una URL válida")
@@ -129,13 +131,32 @@ export async function createResource(formData: FormData) {
   }
   const data = parsed.data;
 
+  let url = data.url || null;
+  let mimeType: string | null = null;
+  let sizeBytes: number | null = null;
+
+  const file = formData.get("file");
+  if (file instanceof File && file.size > 0) {
+    if (file.size > MAX_RESOURCE_FILE_BYTES) {
+      return { error: "El archivo no puede pesar más de 10 MB" };
+    }
+    const blob = await put(`resources/${data.clientId}/${Date.now()}-${file.name}`, file, {
+      access: "public",
+    });
+    url = blob.url;
+    mimeType = file.type || null;
+    sizeBytes = file.size;
+  }
+
   const { db, tenantId } = await getTenantDb();
   await db.resource.create({
     data: {
       tenantId,
       clientId: data.clientId,
       name: data.name,
-      url: data.url || null,
+      url,
+      mimeType,
+      sizeBytes,
     },
   });
 

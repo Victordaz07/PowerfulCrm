@@ -24,6 +24,12 @@ function isSafeResourceUrl(url: string) {
   }
 }
 
+function formatFileSize(bytes: number | null) {
+  if (!bytes) return null;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 type Badge = { background: string; color: string };
 const CONTRACT_BADGE: Record<string, Badge> = {
   ACTIVO: { background: "oklch(65% 0.15 150 / 0.18)", color: "oklch(60% 0.15 150)" },
@@ -186,6 +192,9 @@ export default async function ClientDetailPage({ params }: PageProps) {
                     </a>
                   ) : (
                     r.name
+                  )}
+                  {formatFileSize(r.sizeBytes) && (
+                    <span className="ml-2 text-xs text-content-dim">{formatFileSize(r.sizeBytes)}</span>
                   )}
                 </div>
                 {canDelete && (

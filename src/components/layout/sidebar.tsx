@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -15,7 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Resumen", icon: LayoutDashboard, shortcut: "G D" },
@@ -27,11 +28,12 @@ const NAV_ITEMS = [
   { href: "/configuracion", label: "Configuración", icon: Settings, shortcut: "G S" },
 ];
 
-// Cuentas conectadas — stub visual (Fase 4 lo conecta a OAuth real).
-const INTEGRATIONS = [
-  { name: "Google Workspace", connected: true },
-  { name: "Microsoft 365", connected: true },
-  { name: "Apple iCloud", connected: false },
+// Cuentas conectadas — Fase A: estado real via Clerk (user.externalAccounts).
+// Las fases B/C/D consumen el token via src/lib/integrations.ts
+// (getProviderToken) para sync real de calendario/correo/contactos.
+const PROVIDERS: { key: "oauth_google" | "oauth_microsoft"; label: string }[] = [
+  { key: "oauth_google", label: "Google Workspace" },
+  { key: "oauth_microsoft", label: "Microsoft 365" },
 ];
 
 interface SidebarProps {
@@ -41,6 +43,40 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
+  const { user } = useUser();
+  const [pending, setPending] = useState<string | null>(null);
+
+  async function handleConnect(strategy: "oauth_google" | "oauth_microsoft") {
+    if (!user || pending) return;
+    setPending(strategy);
+    try {
+      const externalAccount = await user.createExternalAccount({
+        strategy,
+        redirectUrl: window.location.href,
+      });
+      const redirectUrl = externalAccount.verification?.externalVerificationRedirectURL?.toString();
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+        return;
+      }
+    } catch (err) {
+      console.error("No se pudo iniciar la conexión de la cuenta", err);
+    }
+    setPending(null);
+  }
+
+  async function handleDisconnect(accountId: string) {
+    if (!user || pending) return;
+    setPending(accountId);
+    try {
+      const account = user.externalAccounts.find((a) => a.id === accountId);
+      await account?.destroy();
+      await user.reload();
+    } catch (err) {
+      console.error("No se pudo desconectar la cuenta", err);
+    }
+    setPending(null);
+  }
 
   return (
     <aside
@@ -107,28 +143,36 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {!collapsed && (
         <div className="flex flex-col gap-2.5 rounded-2xl border border-edge bg-surface p-4">
           <div className="text-[12.5px] font-semibold text-content-muted">Cuentas conectadas</div>
-          {INTEGRATIONS.map((acc) => (
-            <div key={acc.name} className="flex items-center gap-2">
-              <span
-                className="h-[7px] w-[7px] shrink-0 rounded-full"
-                style={{ background: acc.connected ? "oklch(65% 0.15 150)" : "var(--content-dim)" }}
-              />
-              <span className="flex-1 text-[12.5px] text-content">{acc.name}</span>
-              <span
-                className="text-[11px] font-semibold"
-                style={{ color: acc.connected ? "oklch(65% 0.15 150)" : "oklch(72% 0.16 30)" }}
-              >
-                {acc.connected ? "Activo" : "Conectar"}
-              </span>
-            </div>
-          ))}
+          {PROVIDERS.map(({ key, label }) => {
+            const account = user?.externalAccounts.find((a) => a.provider === key);
+            const connected = !!account && account.verification?.status === "verified";
+            const busy = pending === key || (!!account && pending === account.id);
+            return (
+              <div key={key} className="flex items-center gap-2">
+                <span
+                  className="h-[7px] w-[7px] shrink-0 rounded-full"
+                  style={{ background: connected ? "oklch(65% 0.15 150)" : "var(--content-dim)" }}
+                />
+                <span className="flex-1 text-[12.5px] text-content">{label}</span>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => (connected && account ? handleDisconnect(account.id) : handleConnect(key))}
+                  className="text-[11px] font-semibold disabled:opacity-60"
+                  style={{ color: connected ? "oklch(65% 0.15 150)" : "oklch(72% 0.16 30)" }}
+                >
+                  {busy ? "..." : connected ? "Activo" : "Conectar"}
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      <div className={cn("mt-auto flex flex-col gap-3", collapsed ? "items-center" : "items-stretch")}>
+      <div className={cn("mt-auto flex flex-col gap-3", collapsed && "items-center")}>
         <div
           className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-surface",
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 transition",
             collapsed && "justify-center px-0"
           )}
         >
@@ -141,7 +185,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           onClick={onToggle}
           aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
           className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-lg border border-edge bg-surface text-content transition-colors hover:bg-surface-strong",
+            "flex h-7 w-7 items-center justify-center rounded-lg border border-edge text-content-muted hover:bg-surface",
             collapsed ? "self-center" : "self-end"
           )}
         >

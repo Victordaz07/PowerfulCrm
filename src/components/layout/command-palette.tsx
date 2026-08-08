@@ -31,11 +31,11 @@ export function CommandPalette() {
   useEffect(() => {
     if (!open) return;
     const q = query.trim();
-    if (q.length < 2) {
-      setResults([]);
-      return;
-    }
     const handle = setTimeout(() => {
+      if (q.length < 2) {
+        setResults([]);
+        return;
+      }
       startTransition(async () => {
         const r = await searchGlobal(q);
         setResults(r);

@@ -1,0 +1,122 @@
+import { getTenantDb } from "@/lib/tenant";
+import { isTenantAdmin } from "@/lib/authz";
+import { formatCurrency, formatDate, cn } from "@/lib/utils";
+import Image from "next/image";
+import { NewInvoiceDialog } from "@/components/facturacion/new-invoice-dialog";
+import { CopyLinkButton } from "@/components/facturacion/copy-link-button";
+import { EditInvoiceDialog } from "@/components/facturacion/edit-invoice-dialog";
+import { ConfirmDeleteButton } from "@/components/ui/confirm-delete-button";
+import { deleteInvoice } from "./actions";
+
+const STATUS_STYLES: Record<string, string> = {
+  PAGADA: "bg-success/15 text-success",
+  PENDIENTE: "bg-warning/15 text-warning",
+  VENCIDA: "bg-danger/15 text-danger",
+  BORRADOR: "bg-surface-strong text-content-muted",
+  ENVIADA: "bg-surface-strong text-content",
+  CANCELADA: "bg-surface-strong text-content-dim",
+};
+
+export default async function FacturacionPage() {
+  const { db } = await getTenantDb();
+  const [invoices, clients, projects, canDelete] = await Promise.all([
+    db.invoice.findMany({
+      include: { client: true },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    db.client.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.project.findMany({ where: { status: "ACTIVO" }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    isTenantAdmin(),
+  ]);
+
+  return (
+    <div className="p-8">
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-content">Facturación</h1>
+          <p className="text-sm text-content-muted">Cotizaciones, facturas y estado de pago.</p>
+        </div>
+        <NewInvoiceDialog clients={clients} projects={projects} />
+      </div>
+
+      <div className="overflow-x-auto rounded-lg border border-edge">
+        <table className="w-full min-w-[640px] text-sm">
+          <thead>
+            <tr className="border-b border-edge bg-[var(--panel-bg)] text-left text-xs text-content-muted">
+              <th className="px-4 py-3 font-medium">Folio</th>
+              <th className="px-4 py-3 font-medium">Cliente</th>
+              <th className="px-4 py-3 font-medium">Vence</th>
+              <th className="px-4 py-3 font-medium">Total</th>
+              <th className="px-4 py-3 font-medium">Estado</th>
+              <th className="px-4 py-3 font-medium"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoices.map((inv) => (
+              <tr
+                key={inv.id}
+                className="border-b border-edge last:border-0 hover:bg-surface transition-colors duration-fast"
+              >
+                <td className="px-4 py-3 font-mono text-xs text-content-muted">{inv.number}</td>
+                <td className="px-4 py-3 text-content">{inv.client.name}</td>
+                <td className="px-4 py-3 text-content-muted">
+                  {inv.dueDate ? formatDate(inv.dueDate) : "—"}
+                </td>
+                <td className="px-4 py-3 font-medium text-content">
+                  {formatCurrency(Number(inv.total), inv.currency)}
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-xs font-medium",
+                      STATUS_STYLES[inv.status]
+                    )}
+                  >
+                    {inv.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-3">
+                    <CopyLinkButton token={inv.publicToken} />
+                    <EditInvoiceDialog
+                      invoice={{
+                        id: inv.id,
+                        number: inv.number,
+                        clientId: inv.clientId,
+                        projectId: inv.projectId,
+                        status: inv.status,
+                        dueDate: inv.dueDate ? inv.dueDate.toISOString().slice(0, 10) : null,
+                      }}
+                      clients={clients}
+                      projects={projects}
+                    />
+                    {canDelete && (
+                      <ConfirmDeleteButton action={deleteInvoice} id={inv.id} itemLabel={`factura ${inv.number}`} />
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {invoices.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-4 py-12">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <Image
+                      src="/illustrations/empty-invoices.png"
+                      alt=""
+                      width={140}
+                      height={140}
+                      className="mb-3"
+                    />
+                    <p className="text-sm text-content-dim">Aún no has creado ninguna factura.</p>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

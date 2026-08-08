@@ -1,0 +1,353 @@
+// ─────────────────────────────────────────────────────────────
+// FreelanceHub — schema multi-tenant
+// Patrón: base compartida + esquema compartido + tenant_id + RLS
+// Ver docs/ARQUITECTURA.md para el porqué de cada decisión.
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // conexión pooled (?pgbouncer=true) — runtime
+  directUrl = env("DIRECT_URL") // conexión directa — migraciones
+}
+
+// ── Tenant (una cuenta / negocio independiente) ────────────────
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  country   String   @default("MX") // define pasarela/impuestos por defecto
+  currency  String   @default("MXN")
+  createdAt DateTime @default(now())
+
+  // Asistente IA (BYOK): el tenant paga su propio uso pegando su API key
+  // del proveedor que elija. aiApiKeyEncrypted nunca se guarda en claro —
+  // ver src/lib/crypto.ts. Sin @relation porque no tiene tabla propia,
+  // vive directo en Tenant (1 tenant = como mucho 1 key configurada hoy).
+  aiProvider        AiProvider?
+  aiApiKeyEncrypted String?
+
+  users           TenantUser[]
+  clients         Client[]
+  leads           Lead[]
+  projects        Project[]
+  invoices        Invoice[]
+  tasks           Task[]
+  events          Event[]
+  contracts       Contract[]
+  resources       Resource[]
+  automationRules AutomationRule[]
+
+  @@map("tenants")
+}
+
+enum AiProvider {
+  ANTHROPIC
+  OPENAI
+  GOOGLE
+}
+
+// ── Usuarios del tenant (mapeados a Clerk por clerkUserId) ─────
+model TenantUser {
+  id          String     @id @default(cuid())
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clerkUserId String
+  email       String
+  name        String?
+  role        TenantRole @default(OWNER)
+  createdAt   DateTime   @default(now())
+
+  @@unique([tenantId, clerkUserId])
+  @@index([tenantId])
+  @@map("tenant_users")
+}
+
+enum TenantRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+// ── CRM: clientes ───────────────────────────────────────────────
+model Client {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  email     String?
+  phone     String?
+  company   String?
+  tags      String[] @default([])
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projects  Project[]
+  invoices  Invoice[]
+  leads     Lead[]
+  events    Event[]
+  contracts Contract[]
+  resources Resource[]
+
+  @@index([tenantId])
+  @@map("clients")
+}
+
+// ── CRM: pipeline de leads/oportunidades (kanban) ───────────────
+model Lead {
+  id        String    @id @default(cuid())
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clientId  String?
+  client    Client?   @relation(fields: [clientId], references: [id])
+  title     String
+  value     Decimal?  @db.Decimal(12, 2)
+  stage     LeadStage @default(NUEVO)
+  source    String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  events Event[]
+
+  @@index([tenantId, stage])
+  @@map("leads")
+}
+
+enum LeadStage {
+  NUEVO
+  CONTACTADO
+  PROPUESTA_ENVIADA
+  NEGOCIACION
+  GANADO
+  PERDIDO
+}
+
+// ── Proyectos ────────────────────────────────────────────────────
+model Project {
+  id          String        @id @default(cuid())
+  tenantId    String
+  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clientId    String
+  client      Client        @relation(fields: [clientId], references: [id])
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVO)
+  startDate   DateTime?
+  dueDate     DateTime?
+  createdAt   DateTime      @default(now())
+
+  tasks    Task[]
+  invoices Invoice[]
+  events   Event[]
+
+  @@index([tenantId])
+  @@map("projects")
+}
+
+enum ProjectStatus {
+  ACTIVO
+  EN_PAUSA
+  COMPLETADO
+  CANCELADO
+}
+
+model Task {
+  id        String     @id @default(cuid())
+  tenantId  String
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId String
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  status    TaskStatus @default(PENDIENTE)
+  dueDate   DateTime?
+  position  Int        @default(0) // orden dentro de la columna kanban
+  createdAt DateTime   @default(now())
+
+  @@index([tenantId, projectId])
+  @@map("tasks")
+}
+
+enum TaskStatus {
+  PENDIENTE
+  EN_PROGRESO
+  EN_REVISION
+  COMPLETADA
+}
+
+// ── Facturación ──────────────────────────────────────────────────
+model Invoice {
+  id                    String        @id @default(cuid())
+  tenantId              String
+  tenant                Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clientId              String
+  client                Client        @relation(fields: [clientId], references: [id])
+  projectId             String?
+  project               Project?      @relation(fields: [projectId], references: [id])
+  number                String // ej. FAC-0001, único por tenant
+  type                  InvoiceType   @default(FACTURA)
+  status                InvoiceStatus @default(BORRADOR)
+  currency              String        @default("MXN")
+  subtotal              Decimal       @db.Decimal(12, 2)
+  tax                   Decimal       @default(0) @db.Decimal(12, 2)
+  total                 Decimal       @db.Decimal(12, 2)
+  dueDate               DateTime?
+  paidAt                DateTime?
+  isRecurring           Boolean       @default(false)
+  recurrenceRule        String? // ej. "monthly" — usado por el job de Inngest
+  stripePaymentIntentId String?
+  publicToken           String        @unique @default(cuid()) // habilita /portal/[token] sin login
+  createdAt             DateTime      @default(now())
+
+  items InvoiceItem[]
+
+  @@unique([tenantId, number])
+  @@index([tenantId, status])
+  @@map("invoices")
+}
+
+enum InvoiceType {
+  COTIZACION
+  FACTURA
+}
+
+enum InvoiceStatus {
+  BORRADOR
+  ENVIADA
+  PAGADA
+  PENDIENTE
+  VENCIDA
+  CANCELADA
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Decimal @default(1) @db.Decimal(10, 2)
+  unitPrice   Decimal @db.Decimal(12, 2)
+
+  @@map("invoice_items")
+}
+
+// ── Calendario: agenda interna vinculada al CRM ─────────────────
+model Event {
+  id             String      @id @default(cuid())
+  tenantId       String
+  tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  type           EventType   @default(REUNION)
+  status         EventStatus @default(CONFIRMADO)
+  startAt        DateTime
+  endAt          DateTime
+  allDay         Boolean     @default(false)
+  location       String? // dirección física o link de videollamada
+  clientId       String?
+  client         Client?     @relation(fields: [clientId], references: [id])
+  projectId      String?
+  project        Project?    @relation(fields: [projectId], references: [id])
+  leadId         String?
+  lead           Lead?       @relation(fields: [leadId], references: [id])
+  reminderSentAt DateTime? // marca cuándo se mandó el recordatorio, evita duplicados
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([tenantId, startAt])
+  @@map("events")
+}
+
+enum EventType {
+  REUNION
+  LLAMADA
+  ENTREGA
+  RECORDATORIO
+  OTRO
+}
+
+enum EventStatus {
+  CONFIRMADO
+  TENTATIVO
+  CANCELADO
+}
+
+// ── Contratos por cliente ────────────────────────────────────────
+model Contract {
+  id        String         @id @default(cuid())
+  tenantId  String
+  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clientId  String
+  client    Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title     String
+  status    ContractStatus @default(BORRADOR)
+  value     Decimal?       @db.Decimal(12, 2)
+  currency  String         @default("MXN")
+  startDate DateTime?
+  endDate   DateTime?
+  notes     String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([tenantId, clientId])
+  @@map("contracts")
+}
+
+enum ContractStatus {
+  BORRADOR
+  ACTIVO
+  FINALIZADO
+  CANCELADO
+}
+
+// ── Recursos/archivos por cliente ────────────────────────────────
+// Link externo (Drive, Dropbox, etc.) o archivo subido a Vercel Blob —
+// en ambos casos `url` es la URL pública; mimeType/sizeBytes solo se
+// llenan cuando es un archivo subido, para distinguir uno de otro en la UI.
+model Resource {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name      String
+  url       String?
+  mimeType  String?
+  sizeBytes Int?
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, clientId])
+  @@map("resources")
+}
+
+// ── Reglas de automatización ─────────────────────────────────────
+// Catálogo fijo de tipos de regla (no un builder de condiciones libre)
+// para mantener la ejecución simple: cada `type` sabe qué consultar y
+// qué avisar. `lastRunAt` evita reenviar el mismo aviso si el cron de
+// Inngest corre más de una vez sobre la misma ventana (mismo rol que
+// Event.reminderSentAt).
+model AutomationRule {
+  id             String             @id @default(cuid())
+  tenantId       String
+  tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  type           AutomationRuleType @default(FACTURAS_POR_VENCER)
+  daysThreshold  Int                @default(3)
+  enabled        Boolean            @default(true)
+  lastRunAt      DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([tenantId])
+  @@map("automation_rules")
+}
+
+enum AutomationRuleType {
+  FACTURAS_POR_VENCER
+  LEADS_SIN_SEGUIMIENTO
+}

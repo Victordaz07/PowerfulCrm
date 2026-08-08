@@ -1,0 +1,93 @@
+"use client";
+
+import { cn } from "@/lib/utils";
+import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { motion } from "motion/react";
+import type { ReactNode } from "react";
+
+interface StatCardProps {
+  label: string;
+  value: string;
+  // ReactNode (elemento ya renderizado), no el componente del ícono en sí:
+  // StatCard es Client Component, y una referencia a un componente (p.ej.
+  // el ícono de Lucide sin invocar) no es serializable cruzando el
+  // límite Server -> Client. El padre (Server Component) debe pasar
+  // `icon={<Wallet size={20} strokeWidth={2} />}` ya armado.
+  icon?: ReactNode;
+  iconTone?: "success" | "primary" | "warning" | "danger" | "neutral";
+  trend?: { value: string; direction: "up" | "down"; tone?: "success" | "danger" | "neutral" };
+  hint?: string;
+  valueTone?: "default" | "danger";
+  className?: string;
+}
+
+const ICON_TONE_STYLES: Record<NonNullable<StatCardProps["iconTone"]>, string> = {
+  success: "bg-success/15 text-success",
+  primary: "bg-primary-500/15 text-primary-400",
+  warning: "bg-warning/15 text-warning",
+  danger: "bg-danger/15 text-danger",
+  neutral: "bg-surface-strong text-content-muted",
+};
+
+const TREND_TONE_STYLES: Record<NonNullable<NonNullable<StatCardProps["trend"]>["tone"]>, string> = {
+  success: "text-success",
+  danger: "text-danger",
+  neutral: "text-content-muted",
+};
+
+export function StatCard({
+  label,
+  value,
+  icon,
+  iconTone = "primary",
+  trend,
+  hint,
+  valueTone = "default",
+  className,
+}: StatCardProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className={cn(
+        "rounded-2xl border border-edge bg-surface p-5 backdrop-blur-md",
+        className
+      )}
+    >
+      {icon ? (
+        <div className="flex items-center gap-4">
+          <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", ICON_TONE_STYLES[iconTone])}>
+            {icon}
+          </div>
+          <div className="min-w-0">
+            <p className="mb-0.5 text-xs text-content-muted">{label}</p>
+            <p className={cn("text-2xl font-semibold num", valueTone === "danger" ? "text-danger" : "text-content")}>
+              {value}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className="mb-2 text-xs text-content-muted">{label}</p>
+          <p className={cn("text-lg font-semibold num", valueTone === "danger" ? "text-danger" : "text-content")}>
+            {value}
+          </p>
+        </>
+      )}
+      {trend && (
+        <span
+          className={cn(
+            "mt-2 inline-flex items-center gap-1 text-[11px]",
+            TREND_TONE_STYLES[trend.tone ?? "neutral"]
+          )}
+        >
+          {trend.direction === "up" ? <ArrowUpRight size={12} strokeWidth={2.5} /> : <ArrowDownRight size={12} strokeWidth={2.5} />}
+          {trend.value}
+        </span>
+      )}
+      {hint && !trend && <span className="mt-2 inline-block text-[11px] text-content-dim">{hint}</span>}
+    </motion.div>
+  );
+}

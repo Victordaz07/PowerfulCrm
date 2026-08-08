@@ -31,9 +31,19 @@ const NAV_ITEMS = [
 // Cuentas conectadas — Fase A: estado real via Clerk (user.externalAccounts).
 // Las fases B/C/D consumen el token via src/lib/integrations.ts
 // (getProviderToken) para sync real de calendario/correo/contactos.
-const PROVIDERS: { key: "oauth_google" | "oauth_microsoft"; label: string }[] = [
-  { key: "oauth_google", label: "Google Workspace" },
-  { key: "oauth_microsoft", label: "Microsoft 365" },
+//
+// OJO: Clerk usa dos vocabularios distintos que NO hay que mezclar: la
+// strategy para iniciar la conexion OAuth se llama "oauth_google" /
+// "oauth_microsoft", pero el campo provider que trae de vuelta un
+// ExternalAccount ya conectado es el nombre corto "google" / "microsoft"
+// (por eso son dos campos separados aqui abajo).
+const PROVIDERS: {
+  strategy: "oauth_google" | "oauth_microsoft";
+  provider: "google" | "microsoft";
+  label: string;
+}[] = [
+  { strategy: "oauth_google", provider: "google", label: "Google Workspace" },
+  { strategy: "oauth_microsoft", provider: "microsoft", label: "Microsoft 365" },
 ];
 
 interface SidebarProps {
@@ -143,12 +153,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {!collapsed && (
         <div className="flex flex-col gap-2.5 rounded-2xl border border-edge bg-surface p-4">
           <div className="text-[12.5px] font-semibold text-content-muted">Cuentas conectadas</div>
-          {PROVIDERS.map(({ key, label }) => {
-            const account = user?.externalAccounts.find((a) => a.provider === key);
+          {PROVIDERS.map(({ strategy, provider, label }) => {
+            const account = user?.externalAccounts.find((a) => a.provider === provider);
             const connected = !!account && account.verification?.status === "verified";
-            const busy = pending === key || (!!account && pending === account.id);
+            const busy = pending === strategy || (!!account && pending === account.id);
             return (
-              <div key={key} className="flex items-center gap-2">
+              <div key={strategy} className="flex items-center gap-2">
                 <span
                   className="h-[7px] w-[7px] shrink-0 rounded-full"
                   style={{ background: connected ? "oklch(65% 0.15 150)" : "var(--content-dim)" }}
@@ -157,7 +167,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() => (connected && account ? handleDisconnect(account.id) : handleConnect(key))}
+                  onClick={() => (connected && account ? handleDisconnect(account.id) : handleConnect(strategy))}
                   className="text-[11px] font-semibold disabled:opacity-60"
                   style={{ color: connected ? "oklch(65% 0.15 150)" : "oklch(72% 0.16 30)" }}
                 >
